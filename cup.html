@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>컵속동전2.0</title>
+  <title>컵속동전2.1</title>
   <style>
     body {
       margin: 0;
@@ -111,13 +111,9 @@
     const bgmOff = document.getElementById("bgmOff");
     const bgm = document.getElementById("bgm");
 
-    const containerWidth = 600;
-    const cupWidth = 70;
-    const cupCount = 5;
-    const gap = (containerWidth - cupWidth * cupCount) / (cupCount + 1);
-    const positions = Array.from({ length: cupCount }, (_, i) =>
-      gap + i * (cupWidth + gap)
-    );
+    const cupPositions = [40, 140, 240, 340, 440];
+    const offset = 10;
+    const adjustedPositions = cupPositions.map(p => p + offset);
 
     let cupWrappers = [];
     let coinIndex = -1;
@@ -129,10 +125,10 @@
       game.innerHTML = "";
       cupWrappers = [];
 
-      for (let i = 0; i < cupCount; i++) {
+      for (let i = 0; i < adjustedPositions.length; i++) {
         const wrapper = document.createElement("div");
         wrapper.classList.add("cup-outer");
-        wrapper.style.left = positions[i] + "px";
+        wrapper.style.left = adjustedPositions[i] + "px";
         wrapper.dataset.index = i;
 
         const cup = document.createElement("div");
@@ -169,10 +165,10 @@
       const maxShuffles = 12;
 
       const interval = setInterval(() => {
-        let i = Math.floor(Math.random() * cupCount);
+        let i = Math.floor(Math.random() * cupWrappers.length);
         let j;
         do {
-          j = Math.floor(Math.random() * cupCount);
+          j = Math.floor(Math.random() * cupWrappers.length);
         } while (i === j);
 
         const tempLeft = cupWrappers[i].style.left;
@@ -197,7 +193,7 @@
       startBtn.disabled = true;
       setupCups();
       message.textContent = "동전이 들어 있는 컵을 잘 기억하세요!";
-      coinIndex = Math.floor(Math.random() * cupCount);
+      coinIndex = Math.floor(Math.random() * cupWrappers.length);
       cupWrappers[coinIndex].firstChild.classList.add("show-coin");
 
       setTimeout(() => {
@@ -220,7 +216,7 @@
     startBtn.onclick = startGame;
 
     setupCups();
-    coinIndex = Math.floor(Math.random() * cupCount);
+    coinIndex = Math.floor(Math.random() * cupWrappers.length);
     cupWrappers[coinIndex].firstChild.classList.add("show-coin");
   </script>
 

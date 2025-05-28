@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>미니게임 모음</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #121826;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      color: white;
+    }
+
+    h1 {
+      font-size: 36px;
+      margin-bottom: 10px;
+    }
+
+    .author {
+      font-size: 16px;
+      color: #aaaaaa;
+      margin-bottom: 40px;
+    }
+
+    .author a {
+      color: #aaaaaa;
+      text-decoration: none;
+    }
+
+    .author a:hover {
+      text-decoration: underline;
+    }
+
+    .game-button {
+      width: 260px;
+      padding: 20px;
+      margin: 15px;
+      font-size: 20px;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background-color: #2d3748;
+      color: white;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+
+    .game-button:hover {
+      background-color: #4a5568;
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <h1>🎮 미니게임 모음</h1>
+  <div class="author"><a href="https://ch.sooplive.co.kr/1414x1415x" target="_blank">by 14zz</a></div>
+
+  <button class="game-button" onclick="location.href='shooting.html'">🎯 사격 회전판</button>
+  <button class="game-button" onclick="location.href='cup.html'">🥤 컵 속 동전 찾기</button>
+</body>
+</html>

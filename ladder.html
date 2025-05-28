@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>사다리 게임</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    body {
+      margin: 0;
+      padding: 0 12px;
+      background: #1e1e2f;
+      font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      width: 100%;
+      max-width: 700px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 36px 0 44px 0;
+      background: #24244a;
+      border-radius: 18px;
+      box-shadow: 0 8px 40px #0008;
+      min-height: 96vh;
+    }
+    h1 {
+      margin: 12px 0 20px 0;
+      font-size: 2em;
+      font-weight: 700;
+      text-align: center;
+    }
+    .inputs-row, .results-row {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .input-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 60px;
+    }
+    .input-label {
+      font-size: 13px;
+      color: #ccc;
+      margin-bottom: 2px;
+    }
+    .player-input, .result-input {
+      width: 70px;
+      padding: 5px 8px;
+      border: 1.5px solid #566;
+      border-radius: 7px;
+      background: #292964;
+      color: #fff;
+      text-align: center;
+      font-size: 17px;
+      outline: none;
+    }
+    .player-input:focus, .result-input:focus {
+      border-color: #5baaff;
+      background: #232349;
+    }
+    .update-btn, .start-btn, .choose-btn, .choice-btn, .verify-btn {
+      margin-left: 10px;
+      padding: 6px 17px;
+      border: none;
+      border-radius: 8px;
+      background: #5baaff;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.14s;
+    }
+    .update-btn:disabled, .start-btn:disabled, .choose-btn:disabled, .choice-btn:disabled, .verify-btn:disabled {
+      background: #999;
+      color: #eee;
+      cursor: not-allowed;
+    }
+    .ladder-canvas-area {
+      margin: 30px 0 20px 0;
+      background: #19213b;
+      border-radius: 20px;
+      box-shadow: 0 4px 20px #0004;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      max-width: 640px;
+      min-height: 350px;
+    }
+    #ladder-canvas {
+      display: block;
+      background: #10152d;
+      border-radius: 16px;
+      margin: 0;
+      width: 100%;
+      max-width: 560px;
+      height: 320px;
+    }
+    .choose-player-row, .verify-row {
+      margin: 22px 0 0 0;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .choose-btn.selected, .verify-btn.selected {
+      background: #ec9;
+      color: #23233a;
+      font-weight: 700;
+    }
+    .results-row {
+      margin: 22px 0 10px 0;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .start-btn {
+      margin-top: 18px;
+      width: 130px;
+      font-size: 16px;
+      letter-spacing: 1px;
+    }
+    .system-msg-area {
+      margin-top: 16px;
+      text-align: center;
+    }
+    .modal-bg {
+      position: fixed;
+      left: 0; top: 0; right: 0; bottom: 0;
+      background: rgba(20,24,38,0.85);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 30;
+    }
+    .modal-box {
+      background: #222244;
+      border-radius: 16px;
+      padding: 32px 26px 24px 26px;
+      box-shadow: 0 4px 20px #0007;
+      text-align: center;
+      color: #fff;
+      font-size: 1.18em;
+      min-width: 220px;
+      max-width: 95vw;
+    }
+    .choice-btn, .verify-btn {
+      margin: 16px 14px 0 14px;
+      padding: 8px 18px;
+      font-size: 15px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 700;
+    }
+    .verify-row {
+      margin-top: 25px;
+      gap: 11px;
+      justify-content: center;
+      align-items: center;
+    }
+    @media (max-width: 700px) {
+      .container { max-width: 99vw; }
+      .ladder-canvas-area { max-width: 99vw; }
+      #ladder-canvas { max-width: 98vw; }
+      .inputs-row, .results-row, .choose-player-row, .verify-row { gap: 7px; }
+      .player-input, .result-input { width: 38px; font-size: 13px; padding: 3px 3px;}
+      .modal-box { padding: 24px 7vw 18px 7vw; }
+      .start-btn { font-size: 13px; width: 90px; }
+      .choice-btn, .verify-btn { font-size: 12px; padding: 6px 12px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>사다리 게임</h1>
+    <div class="inputs-row" id="player-inputs-row"></div>
+    <button class="update-btn" id="updateBtn">업데이트</button>
+    <div class="ladder-canvas-area" id="ladderCanvasArea" style="display:none;">
+      <canvas id="ladder-canvas" width="560" height="320"></canvas>
+    </div>
+    <div class="choose-player-row" id="choosePlayerRow" style="display:none;">
+      <span style="font-size:1.04em;">번호 선택: </span>
+    </div>
+    <div class="verify-row" id="verifyRow" style="display:none;">
+      <span style="font-size:1.04em;">검증하기: </span>
+    </div>
+    <div class="results-row" id="result-inputs-row" style="display:none;"></div>
+    <button class="start-btn" id="startBtn" disabled>게임 시작</button>
+    <div class="system-msg-area" id="systemMsgArea"></div>
+  </div>
+  <div class="modal-bg" id="choiceModal" style="display:none;">
+    <div class="modal-box">
+      <div style="margin-bottom:16px;">
+        <span style="font-size:1.13em;font-weight:600;">바꿀 기회를 드리겠습니다!</span>
+      </div>
+      <button class="choice-btn" id="retryBtn">바꿀래</button>
+      <button class="choice-btn" id="continueBtn">안바꿀래</button>
+    </div>
+  </div>
+  <script>
+    // ==== 상태 변수들 ====
+    const PLAYER_COUNT = 6;
+    const playerInputsRow = document.getElementById('player-inputs-row');
+    const updateBtn = document.getElementById('updateBtn');
+    const ladderCanvasArea = document.getElementById('ladderCanvasArea');
+    const ladderCanvas = document.getElementById('ladder-canvas');
+    const choosePlayerRow = document.getElementById('choosePlayerRow');
+    const verifyRow = document.getElementById('verifyRow');
+    const resultInputsRow = document.getElementById('result-inputs-row');
+    const startBtn = document.getElementById('startBtn');
+    const systemMsgArea = document.getElementById('systemMsgArea');
+    const choiceModal = document.getElementById('choiceModal');
+    const retryBtn = document.getElementById('retryBtn');
+    const continueBtn = document.getElementById('continueBtn');
+
+    let players = Array(PLAYER_COUNT).fill('');
+    let results = [];
+    let usedCount = 0;
+    let selectedIdx = -1;
+    let ladderHeight = 12;
+    let ladderLineMap = [];
+    let currentLadderBackup = null;
+    let halfChanceUsed = false;
+    let gameInProgress = false;
+    let prevHalfPath = null;
+    let lastEndCol = null;
+    let isVerifying = false;
+
+    function renderPlayerInputs() {
+      playerInputsRow.innerHTML = '';
+      for (let i = 0; i < PLAYER_COUNT; i++) {
+        const block = document.createElement('div');
+        block.className = 'input-block';
+        const label = document.createElement('span');
+        label.className = 'input-label';
+        label.textContent = (i+1) + '';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'player-input';
+        input.maxLength = 10;
+        input.value = players[i];
+        input.dataset.idx = i;
+        input.placeholder = `참가자`;
+        input.oninput = e => {
+          players[i] = e.target.value.trim();
+        };
+        block.appendChild(label);
+        block.appendChild(input);
+        playerInputsRow.appendChild(block);
+      }
+    }
+    renderPlayerInputs();
+
+    updateBtn.onclick = () => {
+      players = [];
+      document.querySelectorAll('.player-input').forEach(inp => {
+        players.push(inp.value.trim());
+      });
+      usedCount = players.filter(v => v).length;
+      renderResultInputs(usedCount);
+      systemMsgArea.textContent = '';
+      ladderCanvasArea.style.display = usedCount >= 2 ? 'flex' : 'none';
+      choosePlayerRow.style.display = 'none';
+      verifyRow.style.display = 'none';
+      startBtn.style.display = '';
+      startBtn.disabled = true;
+      selectedIdx = -1;
+      halfChanceUsed = false;
+      gameInProgress = false;
+      prevHalfPath = null;
+      lastEndCol = null;
+      isVerifying = false;
+      if (usedCount >= 2) {
+        makeLadder(usedCount, ladderHeight);
+        currentLadderBackup = JSON.parse(JSON.stringify(ladderLineMap));
+        drawLadder([]);
+      }
+    };
+
+    function renderResultInputs(count) {
+      resultInputsRow.innerHTML = '';
+      results = Array(count).fill('');
+      if (count < 2) {
+        resultInputsRow.style.display = 'none';
+        return;
+      }
+      resultInputsRow.style.display = 'flex';
+      for (let i = 0; i < count; i++) {
+        const block = document.createElement('div');
+        block.className = 'input-block';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'result-input';
+        input.maxLength = 10;
+        input.value = '';
+        input.placeholder = `결과`;
+        input.dataset.idx = i;
+        input.oninput = e => {
+          results[i] = e.target.value.trim();
+          checkReady();
+        };
+        block.appendChild(input);
+        resultInputsRow.appendChild(block);
+      }
+    }
+
+    function checkReady() {
+      let ps = players.filter(v => v);
+      let rs = Array.from(resultInputsRow.querySelectorAll('.result-input')).map(inp => inp.value.trim());
+      if (ps.length < 2 || rs.length < 2) {
+        startBtn.disabled = true;
+        choosePlayerRow.style.display = 'none';
+        return false;
+      }
+      let ready = (ps.length === rs.length) && ps.every(Boolean) && rs.every(Boolean);
+      startBtn.disabled = !ready;
+      if (ready) renderChoosePlayerBtns(ps.length);
+      else choosePlayerRow.style.display = 'none';
+      return ready;
+    }
+    resultInputsRow.addEventListener('input', checkReady);
+
+    function renderChoosePlayerBtns(count) {
+      choosePlayerRow.innerHTML = `<span style="font-size:1.04em;">번호 선택: </span>`;
+      for (let i = 0; i < count; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'choose-btn';
+        btn.textContent = (i+1);
+        btn.style.minWidth = '32px';
+        btn.onclick = () => {
+          document.querySelectorAll('.choose-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          selectedIdx = i;
+        };
+        choosePlayerRow.appendChild(btn);
+      }
+      choosePlayerRow.style.display = 'flex';
+    }
+
+    // 검증용 버튼(게임 끝나면 표시)
+    function renderVerifyBtns(count) {
+      verifyRow.innerHTML = `<span style="font-size:1.04em;">검증하기: </span>`;
+      for (let i = 0; i < count; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'verify-btn';
+        btn.textContent = (i+1);
+        btn.style.minWidth = '32px';
+        btn.onclick = async () => {
+          if (isVerifying) return;
+          isVerifying = true;
+          document.querySelectorAll('.verify-btn').forEach(b=>b.disabled=true);
+          await animateLadder(false, i, 60, true); // 0.06초(60ms) per step
+          document.querySelectorAll('.verify-btn').forEach(b=>b.disabled=false);
+          isVerifying = false;
+        };
+        verifyRow.appendChild(btn);
+      }
+      verifyRow.style.display = 'flex';
+    }
+
+    function makeLadder(cols, rows) {
+      ladderLineMap = [];
+      for (let r = 0; r < rows; r++) {
+        ladderLineMap[r] = Array(cols-1).fill(false);
+        for (let c = 0; c < cols-1; c++) {
+          if (Math.random() < 0.4) {
+            if (c > 0 && ladderLineMap[r][c-1]) continue;
+            ladderLineMap[r][c] = true;
+          }
+        }
+      }
+    }
+
+    // 세로 금색, 가로 얇은 하늘색, 빨간선 궤적
+    function drawLadder(path=[]) {
+      const cols = usedCount;
+      const rows = ladderHeight;
+      const w = ladderCanvas.width;
+      const h = ladderCanvas.height;
+      const marginX = 40, marginY = 36;
+      const areaW = w - 2 * marginX;
+      const areaH = h - 2 * marginY;
+      const colGap = areaW / (cols - 1);
+      const rowGap = areaH / (rows - 1);
+      const ctx = ladderCanvas.getContext('2d');
+      ctx.clearRect(0, 0, w, h);
+
+      ctx.lineWidth = 7;
+      ctx.strokeStyle = "#FFD700";
+      for (let c = 0; c < cols; c++) {
+        ctx.beginPath();
+        ctx.moveTo(marginX + colGap * c, marginY);
+        ctx.lineTo(marginX + colGap * c, marginY + areaH);
+        ctx.stroke();
+      }
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = "#5baaff";
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols-1; c++) {
+          if (ladderLineMap[r][c]) {
+            ctx.beginPath();
+            ctx.moveTo(marginX + colGap * c, marginY + rowGap * r);
+            ctx.lineTo(marginX + colGap * (c+1), marginY + rowGap * r);
+            ctx.stroke();
+          }
+        }
+      }
+      if (path.length > 1) {
+        ctx.save();
+        ctx.lineWidth = 6;
+        ctx.strokeStyle = "#f46";
+        ctx.shadowColor = "#fff";
+        ctx.shadowBlur = 4;
+        ctx.beginPath();
+        let first = path[0];
+        ctx.moveTo(marginX + colGap * first.col, marginY + rowGap * first.row);
+        for (let i = 1; i < path.length; i++) {
+          let pt = path[i];
+          ctx.lineTo(marginX + colGap * pt.col, marginY + rowGap * pt.row);
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    function drawLadderPathForAnimation(p, extraPt) {
+      drawLadder([]);
+      const cols = usedCount, rows = ladderHeight;
+      const marginX = 40, marginY = 36;
+      const w = ladderCanvas.width, h = ladderCanvas.height;
+      const areaW = w - 2 * marginX;
+      const areaH = h - 2 * marginY;
+      const colGap = areaW / (cols - 1);
+      const rowGap = areaH / (rows - 1);
+      const ctx = ladderCanvas.getContext('2d');
+      ctx.save();
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = "#f46";
+      ctx.shadowColor = "#fff";
+      ctx.shadowBlur = 4;
+      ctx.beginPath();
+      if (p.length) {
+        let first = p[0];
+        let x = marginX + colGap * first.col;
+        let y = marginY + rowGap * first.row;
+        ctx.moveTo(x, y);
+        for (let i = 1; i < p.length; i++) {
+          let pt = p[i];
+          ctx.lineTo(marginX + colGap * pt.col, marginY + rowGap * pt.row);
+        }
+        if (extraPt) {
+          ctx.lineTo(extraPt.x, extraPt.y);
+        }
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 반드시 사다리 궤적이 "세로선 교차점"만 통과하도록!!
+    async function animateLadder(fromHalf, startCol, stepDuration = 620, isFastMode = false) {
+      let currCol = (startCol !== null && startCol !== undefined) ? startCol : selectedIdx;
+      let currRow = (fromHalf && prevHalfPath) ? prevHalfPath[prevHalfPath.length - 1].row : 0;
+      const cols = usedCount, rows = ladderHeight;
+      let path = [];
+
+      // path 복원 (세로선 교차점만 있도록!)
+      if (fromHalf && prevHalfPath) {
+        path = prevHalfPath.map(pt => ({...pt}));
+        currCol = path[path.length - 1].col;
+        currRow = path[path.length - 1].row;
+      } else {
+        path = [{col: currCol, row: currRow}];
+      }
+
+      const marginX = 40, marginY = 36;
+      const w = ladderCanvas.width, h = ladderCanvas.height;
+      const areaW = w - 2 * marginX;
+      const areaH = h - 2 * marginY;
+      const colGap = areaW / (cols - 1);
+      const rowGap = areaH / (rows - 1);
+
+      let stopPoint = Math.floor(rows / 2);
+      let canShowChoice = !fromHalf && !halfChanceUsed && gameInProgress && !isFastMode;
+
+      // 세로선에서 출발해서(교차점만) 항상 세로→좌/우→세로 순서만 따름
+      function animateSegment(x1, y1, x2, y2, duration) {
+        return new Promise(res => {
+          let start = null;
+          function step(ts) {
+            if (!start) start = ts;
+            let elapsed = ts - start;
+            let t = Math.min(elapsed / duration, 1);
+            let curX = x1 + (x2 - x1) * t;
+            let curY = y1 + (y2 - y1) * t;
+            drawLadderPathForAnimation(path, {x: curX, y: curY, virtual:true});
+            if (t < 1) requestAnimationFrame(step);
+            else res();
+          }
+          requestAnimationFrame(step);
+        });
+      }
+
+      if (path.length === 1 && currRow === 0) drawLadder(path);
+
+      while (currRow < rows) {
+        // 50% 도달 & 바꿀기회 남았으면 멈춤
+        if (canShowChoice && currRow >= stopPoint) {
+          prevHalfPath = path.map(pt => ({...pt}));
+          setTimeout(() => { choiceModal.style.display = 'flex'; }, 400);
+          halfChanceUsed = true;
+          return;
+        }
+        // 항상 세로→좌/우→세로 구조 유지
+        // 1. 아래로 한칸
+        let x1 = marginX + colGap * currCol;
+        let y1 = marginY + rowGap * currRow;
+        let x2 = x1;
+        let y2 = marginY + rowGap * (currRow + 1);
+        await animateSegment(x1, y1, x2, y2, isFastMode ? stepDuration : 620);
+        currRow++;
+        path.push({col: currCol, row: currRow});
+        // 2. 좌우 이동(필요할때만)
+        if (currRow <= rows) {
+          if (currCol < cols-1 && ladderLineMap[currRow-1][currCol]) {
+            let nx = marginX + colGap * (currCol+1);
+            let ny = marginY + rowGap * currRow;
+            await animateSegment(x2, y2, nx, ny, isFastMode ? stepDuration : 520);
+            currCol++;
+            path.push({col: currCol, row: currRow});
+          } else if (currCol > 0 && ladderLineMap[currRow-1][currCol-1]) {
+            let nx = marginX + colGap * (currCol-1);
+            let ny = marginY + rowGap * currRow;
+            await animateSegment(x2, y2, nx, ny, isFastMode ? stepDuration : 520);
+            currCol--;
+            path.push({col: currCol, row: currRow});
+          }
+        }
+      }
+      drawLadder(path);
+      await sleep(isFastMode ? 80 : 650);
+
+      if (!isFastMode) {
+        lastEndCol = currCol;
+        showResult(currCol);
+        setTimeout(() => {
+          choosePlayerRow.style.display = 'none';
+          startBtn.style.display = 'none';
+          renderVerifyBtns(usedCount);
+        }, 300);
+        gameInProgress = false;
+      }
+      // 검증 모드는 상태 변화 없음
+    }
+
+    function sleep(ms) {
+      return new Promise(res => setTimeout(res, ms));
+    }
+
+    function showResult(col) {
+      let playerName = players.filter(v=>v)[selectedIdx];
+      let resultName = Array.from(resultInputsRow.querySelectorAll('.result-input'))[col].value.trim();
+      systemMsgArea.innerHTML =
+        `<b style="color:#4af;font-size:1.15em;">${playerName}</b> 님의 결과는<br>
+        <b style="color:#fd5;font-size:1.2em;">${resultName}</b> 입니다!`;
+    }
+
+    startBtn.onclick = async () => {
+      let ps = players.filter(v => v);
+      let rs = Array.from(resultInputsRow.querySelectorAll('.result-input')).map(inp => inp.value.trim());
+      if (ps.length !== rs.length || ps.length < 2 || !ps.every(Boolean) || !rs.every(Boolean) || selectedIdx < 0) {
+        alert('입력값을 모두 확인해 주세요!');
+        return;
+      }
+      startBtn.disabled = true;
+      choosePlayerRow.style.display = 'none';
+      startBtn.style.display = '';
+      ladderCanvasArea.style.display = 'flex';
+      halfChanceUsed = halfChanceUsed;
+      gameInProgress = true;
+      prevHalfPath = null;
+      lastEndCol = null;
+      isVerifying = false;
+      verifyRow.style.display = 'none';
+      await animateLadder(false, null, 620, false);
+    };
+
+    retryBtn.onclick = () => {
+      choiceModal.style.display = 'none';
+      selectedIdx = -1;
+      renderChoosePlayerBtns(usedCount);
+      startBtn.disabled = false;
+      startBtn.style.display = '';
+      ladderCanvasArea.style.display = 'flex';
+      systemMsgArea.innerHTML = `<b style="color:#fd5;">번호를 다시 선택해 주세요!</b>`;
+    };
+
+    continueBtn.onclick = async () => {
+      choiceModal.style.display = 'none';
+      await animateLadder(true, selectedIdx, 620, false);
+    };
+
+    playerInputsRow.addEventListener('input', () => {
+      startBtn.disabled = true;
+      startBtn.style.display = '';
+      verifyRow.style.display = 'none';
+      systemMsgArea.textContent = '';
+    });
+    renderPlayerInputs();
+
+  </script>
+</body>
+</html>

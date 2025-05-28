@@ -15,14 +15,17 @@
       flex-direction: column;
       align-items: center;
       justify-content: center; /* 화면 세로 중앙정렬! */
+      padding: 0 10px;
+      box-sizing: border-box;
     }
     #container {
       display: flex;
       flex-direction: column;
       align-items: center;
-      width: 100vw;
+      width: 100%;
+      max-width: 600px;
       min-height: 100vh;
-      height: 100vh;
+      margin: 0 auto;
     }
     h1 {
       margin: 40px 0 0 0;
@@ -75,13 +78,13 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      width: 100vw;
+      width: 100%;
       max-width: 600px;
       height: 260px;
       position: relative;
     }
     #game-table {
-      width: 95vw;
+      width: 100%;
       max-width: 540px;
       height: 180px;
       background: linear-gradient(to bottom, #0f283e 0%, #1e3955 100%);
@@ -190,7 +193,7 @@
       opacity: 1;
     }
     @media (max-width: 600px) {
-      #game-table { width: 98vw; max-width: none; height: 130px; }
+      #game-table { width: 100%; max-width: none; height: 130px; }
       .cup { width: 42px; height: 54px; }
       .coin { width: 14px; height: 14px; top: 33px;}
       .show-empty::after { top: 39px; font-size: 15px; }

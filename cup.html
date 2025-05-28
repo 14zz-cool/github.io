@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>컵속동전1.9</title>
+  <title>컵속동전2.0</title>
   <style>
     body {
       margin: 0;
@@ -111,10 +111,17 @@
     const bgmOff = document.getElementById("bgmOff");
     const bgm = document.getElementById("bgm");
 
+    const containerWidth = 600;
+    const cupWidth = 70;
+    const cupCount = 5;
+    const gap = (containerWidth - cupWidth * cupCount) / (cupCount + 1);
+    const positions = Array.from({ length: cupCount }, (_, i) =>
+      gap + i * (cupWidth + gap)
+    );
+
     let cupWrappers = [];
     let coinIndex = -1;
     let isClickable = false;
-    const positions = [40, 140, 240, 340, 440];
 
     bgm.volume = 0.3;
 
@@ -122,7 +129,7 @@
       game.innerHTML = "";
       cupWrappers = [];
 
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < cupCount; i++) {
         const wrapper = document.createElement("div");
         wrapper.classList.add("cup-outer");
         wrapper.style.left = positions[i] + "px";
@@ -162,10 +169,10 @@
       const maxShuffles = 12;
 
       const interval = setInterval(() => {
-        let i = Math.floor(Math.random() * 5);
+        let i = Math.floor(Math.random() * cupCount);
         let j;
         do {
-          j = Math.floor(Math.random() * 5);
+          j = Math.floor(Math.random() * cupCount);
         } while (i === j);
 
         const tempLeft = cupWrappers[i].style.left;
@@ -190,7 +197,7 @@
       startBtn.disabled = true;
       setupCups();
       message.textContent = "동전이 들어 있는 컵을 잘 기억하세요!";
-      coinIndex = Math.floor(Math.random() * 5);
+      coinIndex = Math.floor(Math.random() * cupCount);
       cupWrappers[coinIndex].firstChild.classList.add("show-coin");
 
       setTimeout(() => {
@@ -212,9 +219,8 @@
     bgmOff.onclick = disableBGM;
     startBtn.onclick = startGame;
 
-    // 초기 설정
     setupCups();
-    coinIndex = Math.floor(Math.random() * 5);
+    coinIndex = Math.floor(Math.random() * cupCount);
     cupWrappers[coinIndex].firstChild.classList.add("show-coin");
   </script>
 

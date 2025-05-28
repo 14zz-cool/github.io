@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>컵속동전2.1</title>
+  <title>컵속동전2.2</title>
   <style>
     body {
       margin: 0;
@@ -99,9 +99,15 @@
     <button id="startBtn">게임 시작</button>
   </div>
 
+  <!-- BGM -->
   <audio id="bgm" loop>
     <source src="https://www.bensound.com/bensound-music/bensound-energy.mp3" type="audio/mpeg">
   </audio>
+
+  <!-- 효과음: 링크로 직접 재생 -->
+  <audio id="sfxCorrect" src="https://cdn.pixabay.com/audio/2022/03/15/audio_8481b2a1c8.mp3"></audio>
+  <audio id="sfxWrong" src="https://cdn.pixabay.com/audio/2021/09/01/audio_918f53b6cd.mp3"></audio>
+  <audio id="sfxShuffle" src="https://cdn.pixabay.com/audio/2022/08/04/audio_b50189b0aa.mp3"></audio>
 
   <script>
     const game = document.getElementById("game");
@@ -110,6 +116,14 @@
     const bgmOn = document.getElementById("bgmOn");
     const bgmOff = document.getElementById("bgmOff");
     const bgm = document.getElementById("bgm");
+
+    const sfxCorrect = document.getElementById("sfxCorrect");
+    const sfxWrong = document.getElementById("sfxWrong");
+    const sfxShuffle = document.getElementById("sfxShuffle");
+
+    sfxCorrect.volume = 0.5;
+    sfxWrong.volume = 0.5;
+    sfxShuffle.volume = 0.3;
 
     const cupPositions = [40, 140, 240, 340, 440];
     const offset = 10;
@@ -151,8 +165,12 @@
 
           if (parseInt(wrapper.dataset.index) === coinIndex) {
             message.textContent = "🎉 정답입니다!";
+            sfxCorrect.currentTime = 0;
+            sfxCorrect.play();
           } else {
             message.textContent = "❌ 당신의 선택은 틀렸습니다.";
+            sfxWrong.currentTime = 0;
+            sfxWrong.play();
             cupWrappers[coinIndex].firstChild.classList.add("show-coin");
           }
         };
@@ -161,6 +179,9 @@
 
     function shuffleCups() {
       message.textContent = "컵을 섞습니다...";
+      sfxShuffle.currentTime = 0;
+      sfxShuffle.play();
+
       let count = 0;
       const maxShuffles = 12;
 

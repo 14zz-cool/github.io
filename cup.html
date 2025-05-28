@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>컵속동전1.5 (수정됨)</title>
+  <title>컵속동전1.9</title>
   <style>
     body {
       margin: 0;
@@ -39,27 +39,33 @@
       box-shadow: inset 0 8px 12px rgba(0, 0, 0, 0.5);
     }
 
+    .cup-outer {
+      position: absolute;
+      transition: left 0.5s ease;
+      bottom: 30px;
+      width: 70px;
+      height: 90px;
+    }
+
     .cup {
-      position: absolute; /* 컵 위치 제어 */
+      position: relative;
       width: 70px;
       height: 90px;
       background: white;
       border-radius: 0 0 40px 40px;
-      bottom: 30px;
-      transition: left 0.5s ease;
-      cursor: pointer;
       box-shadow: 0px 8px 10px rgba(0, 0, 0, 0.4);
+      cursor: pointer;
     }
 
     .coin {
-      position: absolute; /* 동전 중앙 정렬 */
+      position: absolute;
       top: 50px;
       left: 50%;
+      transform: translateX(-50%);
       width: 20px;
       height: 20px;
       background: gold;
       border-radius: 50%;
-      transform: translateX(-50%);
       box-shadow: 0 0 5px gold;
       display: none;
     }
@@ -105,7 +111,7 @@
     const bgmOff = document.getElementById("bgmOff");
     const bgm = document.getElementById("bgm");
 
-    let cups = [];
+    let cupWrappers = [];
     let coinIndex = -1;
     let isClickable = false;
     const positions = [40, 140, 240, 340, 440];
@@ -114,33 +120,37 @@
 
     function setupCups() {
       game.innerHTML = "";
-      cups = [];
+      cupWrappers = [];
 
       for (let i = 0; i < 5; i++) {
+        const wrapper = document.createElement("div");
+        wrapper.classList.add("cup-outer");
+        wrapper.style.left = positions[i] + "px";
+        wrapper.dataset.index = i;
+
         const cup = document.createElement("div");
         cup.classList.add("cup");
-        cup.style.left = positions[i] + "px";
-        cup.dataset.index = i;
 
         const coin = document.createElement("div");
         coin.classList.add("coin");
-        cup.appendChild(coin);
 
-        game.appendChild(cup);
-        cups.push(cup);
+        cup.appendChild(coin);
+        wrapper.appendChild(cup);
+        game.appendChild(wrapper);
+        cupWrappers.push(wrapper);
       }
 
-      cups.forEach((cup, idx) => {
-        cup.onclick = () => {
+      cupWrappers.forEach((wrapper) => {
+        wrapper.onclick = () => {
           if (!isClickable) return;
           isClickable = false;
           startBtn.disabled = false;
 
-          if (parseInt(cup.dataset.index) === coinIndex) {
+          if (parseInt(wrapper.dataset.index) === coinIndex) {
             message.textContent = "🎉 정답입니다!";
           } else {
             message.textContent = "❌ 당신의 선택은 틀렸습니다.";
-            cups[coinIndex].classList.add("show-coin");
+            cupWrappers[coinIndex].firstChild.classList.add("show-coin");
           }
         };
       });
@@ -158,13 +168,14 @@
           j = Math.floor(Math.random() * 5);
         } while (i === j);
 
-        // 위치 교환
-        const tempLeft = cups[i].style.left;
-        cups[i].style.left = cups[j].style.left;
-        cups[j].style.left = tempLeft;
+        const tempLeft = cupWrappers[i].style.left;
+        cupWrappers[i].style.left = cupWrappers[j].style.left;
+        cupWrappers[j].style.left = tempLeft;
 
-        [cups[i].dataset.index, cups[j].dataset.index] = [cups[j].dataset.index, cups[i].dataset.index];
-        [cups[i], cups[j]] = [cups[j], cups[i]];
+        [cupWrappers[i].dataset.index, cupWrappers[j].dataset.index] =
+          [cupWrappers[j].dataset.index, cupWrappers[i].dataset.index];
+
+        [cupWrappers[i], cupWrappers[j]] = [cupWrappers[j], cupWrappers[i]];
 
         count++;
         if (count >= maxShuffles) {
@@ -180,10 +191,10 @@
       setupCups();
       message.textContent = "동전이 들어 있는 컵을 잘 기억하세요!";
       coinIndex = Math.floor(Math.random() * 5);
-      cups[coinIndex].classList.add("show-coin");
+      cupWrappers[coinIndex].firstChild.classList.add("show-coin");
 
       setTimeout(() => {
-        cups[coinIndex].classList.remove("show-coin");
+        cupWrappers[coinIndex].firstChild.classList.remove("show-coin");
         shuffleCups();
       }, 2000);
     }
@@ -201,9 +212,10 @@
     bgmOff.onclick = disableBGM;
     startBtn.onclick = startGame;
 
+    // 초기 설정
     setupCups();
     coinIndex = Math.floor(Math.random() * 5);
-    cups[coinIndex].classList.add("show-coin");
+    cupWrappers[coinIndex].firstChild.classList.add("show-coin");
   </script>
 
   <div style="margin-top: 40px;">

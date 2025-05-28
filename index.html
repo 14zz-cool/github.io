@@ -1,66 +1,128 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <title>미니게임 모음</title>
+  <meta charset="UTF-8">
+  <title>게임 메인 페이지</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <style>
-    body {
+    html, body {
       margin: 0;
-      background-color: #121826;
-      font-family: 'Segoe UI', sans-serif;
+      padding: 0;
+      background: #121826;
+      font-family: 'Segoe UI', 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+      color: #fff;
+      height: 100%;
+      width: 100%;
+    }
+    body {
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      height: 100vh;
-      color: white;
+      justify-content: flex-start;
+      box-sizing: border-box;
     }
-
+    .container {
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 44px;
+      padding-bottom: 48px;
+      box-sizing: border-box;
+    }
     h1 {
       font-size: 36px;
-      margin-bottom: 10px;
+      margin: 0 0 14px 0;
+      text-align: center;
+      font-weight: 700;
+      letter-spacing: 0.01em;
     }
-
     .author {
-      font-size: 16px;
-      color: #aaaaaa;
-      margin-bottom: 40px;
+      font-size: 15px;
+      color: #aaa;
+      margin-bottom: 36px;
+      text-align: center;
+      letter-spacing: 0.01em;
     }
-
     .author a {
-      color: #aaaaaa;
+      color: #b8c6d6;
       text-decoration: none;
+      transition: color 0.2s;
     }
-
     .author a:hover {
+      color: #ffe28a;
       text-decoration: underline;
     }
-
-    .game-button {
-      width: 260px;
-      padding: 20px;
-      margin: 15px;
-      font-size: 20px;
-      font-weight: bold;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      background-color: #2d3748;
-      color: white;
-      transition: background-color 0.3s, transform 0.2s;
+    .game-list {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
     }
-
-    .game-button:hover {
-      background-color: #4a5568;
-      transform: translateY(-2px);
+    .game-button {
+      width: 94vw;
+      max-width: 320px;
+      padding: 18px 0;
+      margin: 0 auto;
+      font-size: 20px;
+      font-weight: 700;
+      border: none;
+      border-radius: 13px;
+      background-color: #2d3748;
+      color: #fff;
+      box-shadow: 0 3px 15px #080e1d2e;
+      cursor: pointer;
+      transition: background 0.18s, transform 0.13s;
+      outline: none;
+      min-height: 52px;
+      letter-spacing: 0.01em;
+      text-align: center;
+      display: block;
+      user-select: none;
+    }
+    .game-button:hover, .game-button:active {
+      background-color: #404e68;
+      transform: translateY(-2px) scale(1.03);
+    }
+    @media (max-width: 600px) {
+      h1 { font-size: 22px; }
+      .author { font-size: 12px; margin-bottom: 20px;}
+      .game-list { gap: 14px; }
+      .game-button {
+        width: 97vw;
+        max-width: 98vw;
+        font-size: 15px;
+        padding: 11px 0;
+        min-height: 42px;
+        border-radius: 10px;
+      }
+      .container { padding-top: 20px; padding-bottom: 18px; }
+    }
+    @media (max-width: 400px) {
+      h1 { font-size: 18px; }
+      .container { padding-top: 10px; }
     }
   </style>
 </head>
 <body>
-  <h1>🎮 미니게임 모음</h1>
-  <div class="author"><a href="https://ch.sooplive.co.kr/1414x1415x" target="_blank">by 14zz</a></div>
-
-  <button class="game-button" onclick="location.href='shooting.html'">🎯 사격 회전판</button>
-  <button class="game-button" onclick="location.href='cup.html'">🥤 컵 속 동전 찾기</button>
+  <div class="container">
+    <h1>게임 메인 페이지</h1>
+    <div class="author">
+      by <a href="https://github.com" target="_blank" rel="noopener">(￣o￣) . z Z</a>
+    </div>
+    <div class="game-list">
+      <button class="game-button" onclick="location.href='shooting.html'">
+        사격 회전판 게임
+      </button>
+      <button class="game-button" onclick="location.href='cup.html'">
+        컵 속 동전 찾기 게임
+      </button>
+      <!-- 게임이 더 추가된다면 이곳에 버튼을 복사해서 붙이면 됩니다 -->
+    </div>
+  </div>
 </body>
 </html>

@@ -109,7 +109,7 @@
     let cupPositions = [];
     let coinIndex = -1;
     let isClickable = false;
-          startBtn.disabled = false;
+      startBtn.disabled = false;
     const positions = [40, 140, 240, 340, 440];
 
     bgm.volume = 0.3;
@@ -137,7 +137,7 @@
         cup.onclick = () => {
           if (!isClickable) return;
           isClickable = false;
-          startBtn.disabled = false;
+      startBtn.disabled = false;
 
           if (parseInt(cup.dataset.index) === coinIndex) {
             message.textContent = "🎉 정답입니다!";
@@ -180,7 +180,7 @@
     }
 
     function startGame() {
-      startBtn.disabled = true;
+  startBtn.disabled = true;
       setupCups();
       message.textContent = "동전이 들어 있는 컵을 잘 기억하세요!";
       coinIndex = Math.floor(Math.random() * 5);
@@ -210,5 +210,9 @@
     coinIndex = Math.floor(Math.random() * 5);
     cups[coinIndex].classList.add("show-coin");
   </script>
+
+<div style="margin-top: 40px;">
+  <a href="index.html" style="color: #aaa; text-decoration: none;">← 메인페이지로 돌아가기</a>
+</div>
 </body>
 </html>

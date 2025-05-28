@@ -10,7 +10,6 @@
       background: #121826;
       margin: 0;
       padding: 20px;
-      color: white;
     }
     #inputs input {
       width: 70px;
@@ -91,10 +90,6 @@
 </div>
 
 <div id="result"></div>
-
-<div style="margin-top: 40px;">
-  <a href="index.html" style="color: #aaa; text-decoration: none;">← 메인페이지로 돌아가기</a>
-</div>
 
 <script>
   const wheelGroup = document.getElementById('wheelGroup');
@@ -215,7 +210,7 @@
 
   function playBGM() {
     const audio = document.getElementById("bgm");
-    audio.volume = 0.3;
+    audio.volume = 0.3; // 🔉 기본 음량 낮춤
     audio.play();
   }
 
@@ -227,5 +222,9 @@
   updateWheel();
 </script>
 
+
+<div style="margin-top: 40px;">
+  <a href="index.html" style="color: #aaa; text-decoration: none;">← 메인페이지로 돌아가기</a>
+</div>
 </body>
 </html>

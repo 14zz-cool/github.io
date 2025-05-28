@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>컵속동전1.5</title>
+  <title>컵속동전1.5 (수정됨)</title>
   <style>
     body {
       margin: 0;
@@ -30,12 +30,6 @@
     }
 
     #game {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  gap: 30px;
-  margin: 0 auto;
-
       position: relative;
       width: 600px;
       height: 300px;
@@ -46,34 +40,25 @@
     }
 
     .cup {
-  width: 70px;
-  height: 100px;
-  text-align: center;
-  margin: 0;
-
-  width: 20%;
-  text-align: center;
-  margin: 0;
-
+      position: absolute; /* 컵 위치 제어 */
       width: 70px;
       height: 90px;
       background: white;
       border-radius: 0 0 40px 40px;
-      
       bottom: 30px;
-      transition: transform 0.5s ease;
+      transition: left 0.5s ease;
       cursor: pointer;
       box-shadow: 0px 8px 10px rgba(0, 0, 0, 0.4);
     }
 
     .coin {
+      position: absolute; /* 동전 중앙 정렬 */
+      top: 50px;
+      left: 50%;
       width: 20px;
       height: 20px;
       background: gold;
       border-radius: 50%;
-      
-      top: 50px;
-      
       transform: translateX(-50%);
       box-shadow: 0 0 5px gold;
       display: none;
@@ -121,10 +106,8 @@
     const bgm = document.getElementById("bgm");
 
     let cups = [];
-    let cupPositions = [];
     let coinIndex = -1;
     let isClickable = false;
-      startBtn.disabled = false;
     const positions = [40, 140, 240, 340, 440];
 
     bgm.volume = 0.3;
@@ -147,12 +130,11 @@
         cups.push(cup);
       }
 
-      // 이벤트 바인딩
       cups.forEach((cup, idx) => {
         cup.onclick = () => {
           if (!isClickable) return;
           isClickable = false;
-      startBtn.disabled = false;
+          startBtn.disabled = false;
 
           if (parseInt(cup.dataset.index) === coinIndex) {
             message.textContent = "🎉 정답입니다!";
@@ -176,12 +158,11 @@
           j = Math.floor(Math.random() * 5);
         } while (i === j);
 
-        // 시각적 위치 교환
+        // 위치 교환
         const tempLeft = cups[i].style.left;
         cups[i].style.left = cups[j].style.left;
         cups[j].style.left = tempLeft;
 
-        // 논리적 위치 교환
         [cups[i].dataset.index, cups[j].dataset.index] = [cups[j].dataset.index, cups[i].dataset.index];
         [cups[i], cups[j]] = [cups[j], cups[i]];
 
@@ -195,7 +176,7 @@
     }
 
     function startGame() {
-  startBtn.disabled = true;
+      startBtn.disabled = true;
       setupCups();
       message.textContent = "동전이 들어 있는 컵을 잘 기억하세요!";
       coinIndex = Math.floor(Math.random() * 5);
@@ -220,14 +201,13 @@
     bgmOff.onclick = disableBGM;
     startBtn.onclick = startGame;
 
-    // 초기 컵 설정
     setupCups();
     coinIndex = Math.floor(Math.random() * 5);
     cups[coinIndex].classList.add("show-coin");
   </script>
 
-<div style="margin-top: 40px;">
-  <a href="index.html" style="color: #aaa; text-decoration: none;">← 메인페이지로 돌아가기</a>
-</div>
+  <div style="margin-top: 40px;">
+    <a href="index.html" style="color: #aaa; text-decoration: none;">← 메인페이지로 돌아가기</a>
+  </div>
 </body>
 </html>

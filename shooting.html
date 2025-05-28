@@ -1,38 +1,231 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <title>사격 회전판</title>
+  <meta charset="UTF-8">
+  <title>사격회전판1.2</title>
   <style>
     body {
+      font-family: sans-serif;
+      text-align: center;
+      background: #121826;
       margin: 0;
-      background-color: #121826;
-      font-family: 'Segoe UI', sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
+      padding: 20px;
       color: white;
     }
-    canvas {
-      background-color: white;
-      border-radius: 50%;
-      margin-bottom: 20px;
+    #inputs input {
+      width: 70px;
+      margin: 5px;
     }
-    a.return-link {
-      margin-top: 40px;
-      color: #aaa;
-      text-decoration: none;
+    #roulette-container {
+      position: relative;
+      width: 400px;
+      height: 400px;
+      margin: 20px auto;
     }
-    a.return-link:hover {
-      text-decoration: underline;
+    #indicator {
+      display: none;
+    }
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+    #star {
+      position: absolute;
+      font-size: 36px;
+      color: white;
+      text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+      transform: scale(0);
+      transition: transform 0.3s ease-out;
+      z-index: 5;
+      pointer-events: none;
+    }
+    .highlight {
+      stroke: black;
+      stroke-width: 4;
+      animation: flash 1s ease-out;
+    }
+    @keyframes flash {
+      0% { stroke-opacity: 1; }
+      50% { stroke-opacity: 0.2; }
+      100% { stroke-opacity: 1; }
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <h1>🎯 사격 회전판</h1>
-  <!-- (게임 관련 canvas와 js는 생략) -->
-  <a href="index.html" class="return-link">← 메인페이지로 돌아가기</a>
+
+<h1>⭐ 사격회전판 1.2</h1>
+
+<!-- 🔊 BGM 제어 버튼 -->
+<button onclick="playBGM()">🎵 BGM 시작</button>
+<button onclick="stopBGM()">🛑 BGM 끄기</button>
+<audio id="bgm" loop>
+  <source src="https://www.bensound.com/bensound-music/bensound-energy.mp3" type="audio/mpeg">
+</audio>
+
+<div id="inputs">
+  <p>룰렛에 들어갈 내용을 입력하고 업데이트를 누르면 적용됩니다. 회전판이 돌아가면 사격하세요.</p>
+  <input id="seg0" value="당첨">
+  <input id="seg1" value="꽝">
+  <input id="seg2" value="+1점">
+  <input id="seg3" value="벌칙">
+  <input id="seg4" value="">
+  <input id="seg5" value="">
+  <br>
+  <button onclick="updateWheel()">업데이트</button>
+</div>
+
+<div id="roulette-container">
+  <div id="indicator"></div>
+  <svg viewBox="0 0 400 400"><g id="wheelGroup"></g></svg>
+  <div id="star">★</div>
+</div>
+
+<div>
+  <button onclick="fire()" id="fireBtn">발사!</button>
+  <button onclick="startRotation()" id="restartBtn" style="display:none;">다시 시작</button>
+</div>
+
+<div id="result"></div>
+
+<div style="margin-top: 40px;">
+  <a href="index.html" style="color: #aaa; text-decoration: none;">← 메인페이지로 돌아가기</a>
+</div>
+
+<script>
+  const wheelGroup = document.getElementById('wheelGroup');
+  const star = document.getElementById('star');
+  const result = document.getElementById('result');
+  let activeTexts = [];
+  let segments = [];
+  let rotation = 0;
+  let interval = null;
+
+  const colors = ['#f66', '#6f6', '#66f', '#ff6', '#f6f', '#6ff'];
+
+  function polarToCartesian(cx, cy, r, angle) {
+    const rad = (angle - 90) * Math.PI / 180;
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+  }
+
+  function describeArc(x, y, r, startAngle, endAngle) {
+    const start = polarToCartesian(x, y, r, endAngle);
+    const end = polarToCartesian(x, y, r, startAngle);
+    const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+    return `M${x},${y} L${start.x},${start.y} A${r},${r} 0 ${largeArc},0 ${end.x},${end.y} Z`;
+  }
+
+  function updateWheel() {
+    stopRotation();
+    document.getElementById("restartBtn").style.display = "none";
+    document.getElementById("fireBtn").disabled = false;
+    star.style.transform = "scale(0)";
+    result.textContent = "";
+
+    activeTexts = [];
+    for (let i = 0; i < 6; i++) {
+      const val = document.getElementById(`seg${i}`).value.trim();
+      if (val) activeTexts.push(val);
+    }
+
+    if (activeTexts.length < 2) {
+      alert("최소 2개 이상의 항목을 입력하세요.");
+      return;
+    }
+
+    drawWheel();
+    startRotation();
+  }
+
+  function drawWheel() {
+    wheelGroup.innerHTML = '';
+    segments = [];
+    const count = activeTexts.length;
+
+    for (let i = 0; i < count; i++) {
+      const start = (i * 360) / count;
+      const end = ((i + 1) * 360) / count;
+
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", describeArc(200, 200, 190, start, end));
+      path.setAttribute("fill", colors[i % colors.length]);
+      wheelGroup.appendChild(path);
+      segments.push(path);
+
+      const angle = (start + end) / 2;
+      const pos = polarToCartesian(200, 200, 120, angle);
+      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("x", pos.x);
+      text.setAttribute("y", pos.y);
+      text.setAttribute("text-anchor", "middle");
+      text.setAttribute("alignment-baseline", "middle");
+      text.setAttribute("font-size", "14");
+      text.setAttribute("fill", "black");
+      text.textContent = activeTexts[i];
+      wheelGroup.appendChild(text);
+    }
+  }
+
+  function startRotation() {
+    if (interval) clearInterval(interval);
+    document.getElementById("fireBtn").disabled = false;
+    star.style.transform = "scale(0)";
+    result.textContent = "";
+    interval = setInterval(() => {
+      rotation = (rotation + Math.floor(Math.random() * 20 + 10)) % 360;
+      wheelGroup.setAttribute('transform', `rotate(${rotation},200,200)`);
+    }, 30);
+  }
+
+  function stopRotation() {
+    if (interval) {
+      clearInterval(interval);
+      interval = null;
+    }
+  }
+
+  function fire() {
+    stopRotation();
+    document.getElementById("fireBtn").disabled = true;
+
+    const count = activeTexts.length;
+    const sliceAngle = 360 / count;
+    const randomSector = Math.floor(Math.random() * count);
+    const sectorAngle = randomSector * sliceAngle + sliceAngle / 2;
+
+    const adjusted = (sectorAngle - rotation + 360) % 360;
+    const index = Math.floor(adjusted / sliceAngle) % count;
+    const hitText = activeTexts[index];
+
+    const pos = polarToCartesian(200, 200, 140, sectorAngle);
+    star.style.left = (pos.x - 18) + "px";
+    star.style.top = (pos.y - 18) + "px";
+    star.style.transform = `scale(1)`;
+
+    segments.forEach(seg => seg.classList.remove("highlight"));
+    segments[index].classList.add("highlight");
+
+    result.textContent = `★ 명중: "${hitText}"`;
+    document.getElementById("restartBtn").style.display = "inline-block";
+  }
+
+  function playBGM() {
+    const audio = document.getElementById("bgm");
+    audio.volume = 0.3;
+    audio.play();
+  }
+
+  function stopBGM() {
+    const audio = document.getElementById("bgm");
+    audio.pause();
+  }
+
+  updateWheel();
+</script>
+
 </body>
 </html>

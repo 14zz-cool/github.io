@@ -2,230 +2,310 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>사격회전판1.2</title>
+  <title>회전판 사격 게임</title>
+  <meta name="viewport" content="width=400, initial-scale=1.0, user-scalable=yes">
   <style>
     body {
-      font-family: sans-serif;
+      background: #20253A;
+      color: #fff;
+      font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+      margin: 0; min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    h1 { margin: 38px 0 15px 0; text-align: center; font-size: 2em; }
+    #game-container { display: flex; flex-direction: column; align-items: center; width: 100vw; max-width: 440px; margin: 0 auto; }
+    #inputs { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 12px; margin-top: 2px; flex-wrap: nowrap; }
+    .input-label { font-size: 15px; margin-right: 10px; }
+    .input-area { display: flex; flex-direction: row; gap: 6px; }
+    input[type="text"] {
+      width: 58px; height: 36px; font-size: 16px; padding: 5px 6px;
+      border-radius: 5px; border: none; background: #edf2fa; color: #1b2636;
+      text-align: center; outline: none; box-sizing: border-box;
+    }
+    input[type="text"]:focus { box-shadow: 0 0 0 2px #5baaff; }
+    #update-btn, #shoot-btn {
+      background: #5baaff; color: #fff; border: none; border-radius: 7px;
+      font-weight: 600; font-size: 17px;
+      padding: 0 14px;
+      margin: 0 0 0 10px; cursor: pointer;
+      box-shadow: 0 2px 8px #3c69ec44; transition: background 0.15s;
+      height: 36px; line-height: 36px;
+      display: inline-block;
+      white-space: nowrap;
+      min-width: 74px;
+      vertical-align: middle;
       text-align: center;
-      background: #121826;
-      margin: 0;
-      padding: 20px;
-      color: white;
     }
-    #inputs input {
-      width: 70px;
-      margin: 5px;
+    #update-btn:active, #shoot-btn:active { background: #347be3; }
+    #update-btn:disabled, #shoot-btn:disabled { background: #ccc; color: #888; cursor: not-allowed; }
+    #bgm-controls { margin-bottom: 12px; display: flex; gap: 12px; justify-content: center; align-items: center; width: 100%; }
+    .bgm-btn {
+      padding: 6px 15px; font-size: 12px; background: #5baaff; color: #fff;
+      border: none; border-radius: 7px; font-weight: 500; cursor: pointer;
+      min-width: 48px; min-height: 22px;
     }
+    .bgm-btn:disabled { background: #ccc; color: #888; cursor: not-allowed; }
     #roulette-container {
-      position: relative;
-      width: 400px;
-      height: 400px;
-      margin: 20px auto;
+      width: 100vw; max-width: 400px; aspect-ratio: 1/1; margin: 0 auto 20px auto;
+      display: flex; align-items: center; justify-content: center; position: relative;
     }
-    #indicator {
-      display: none;
-    }
-    svg {
-      width: 100%;
-      height: 100%;
-    }
-    #star {
-      position: absolute;
-      font-size: 36px;
-      color: white;
-      text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
-      transform: scale(0);
-      transition: transform 0.3s ease-out;
-      z-index: 5;
-      pointer-events: none;
-    }
-    .highlight {
-      stroke: black;
-      stroke-width: 4;
-      animation: flash 1s ease-out;
-    }
-    @keyframes flash {
-      0% { stroke-opacity: 1; }
-      50% { stroke-opacity: 0.2; }
-      100% { stroke-opacity: 1; }
+    svg { width: 100%; height: auto; display: block; background: transparent; border-radius: 50%; }
+    #aim-overlay {
+      position: absolute; left: 50%; top: 18px; transform: translateX(-50%);
+      width: 38px; height: 38px; pointer-events: none; z-index: 3;
+      filter: drop-shadow(0 1px 3px #ffe28a88);
     }
     #result {
-      margin-top: 20px;
-      font-size: 18px;
-      font-weight: bold;
+      font-size: 1.3em; font-weight: 700; margin: 18px 0 12px 0;
+      text-align: center; min-height: 34px; height: 34px;
+      display: flex; justify-content: center; align-items: center;
+      color: #f9e56b; text-shadow: 0 2px 8px #0e1322cc;
+      letter-spacing: 0.1em;
     }
+    @media (max-width: 500px) {
+      #roulette-container { max-width: 98vw; }
+      #game-container { max-width: 98vw; }
+      .input-area input[type="text"] { width: 36px; font-size: 14px; height: 28px;}
+      #update-btn, #shoot-btn { font-size: 13px; padding: 0 6px; height: 28px; min-width: 54px;}
+      .bgm-btn { padding: 4px 10px; font-size: 10px; min-width: 32px; min-height: 16px;}
+    }
+    a { color: #cce; text-decoration: none; }
+    a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
+  <h1>회전판 사격 게임</h1>
+  <div id="game-container">
+    <form id="inputs" autocomplete="off" onsubmit="return false;">
+      <span class="input-label">입력 항목</span>
+      <span class="input-area">
+        <input type="text" id="input0" maxlength="8" placeholder="항목1" value="당첨">
+        <input type="text" id="input1" maxlength="8" placeholder="항목2" value="꽝">
+        <input type="text" id="input2" maxlength="8" placeholder="항목3">
+        <input type="text" id="input3" maxlength="8" placeholder="항목4">
+        <input type="text" id="input4" maxlength="8" placeholder="항목5">
+        <input type="text" id="input5" maxlength="8" placeholder="항목6">
+      </span>
+      <button id="update-btn" type="button">업데이트</button>
+    </form>
+    <div id="bgm-controls">
+      <button id="bgmOn" class="bgm-btn">🎵 BGM 켜기</button>
+      <button id="bgmOff" class="bgm-btn">🔇 BGM 끄기</button>
+    </div>
+    <div id="roulette-container">
+      <svg id="roulette" viewBox="0 0 400 400" width="400" height="400" aria-label="사격 회전판"></svg>
+      <div id="aim-overlay">
+        <svg width="38" height="38" viewBox="0 0 36 36">
+          <circle cx="18" cy="18" r="14" stroke="#ffd454" stroke-width="2.5" fill="none"/>
+          <circle cx="18" cy="18" r="3" fill="#f25d29" stroke="#ffd454" stroke-width="2"/>
+          <line x1="18" y1="0" x2="18" y2="10" stroke="#ffd454" stroke-width="2.2"/>
+          <line x1="18" y1="26" x2="18" y2="36" stroke="#ffd454" stroke-width="2.2"/>
+          <line x1="0" y1="18" x2="10" y2="18" stroke="#ffd454" stroke-width="2.2"/>
+          <line x1="26" y1="18" x2="36" y2="18" stroke="#ffd454" stroke-width="2.2"/>
+        </svg>
+      </div>
+    </div>
+    <button id="shoot-btn" type="button">사격 준비</button>
+    <div id="result"></div>
+    <div style="margin-top:30px;">
+      <a href="index.html">← 메인페이지로 돌아가기</a>
+    </div>
+    <audio id="bgm" loop>
+      <source src="https://www.bensound.com/bensound-music/bensound-energy.mp3" type="audio/mpeg">
+    </audio>
+  </div>
+  <script>
+    const COLORS = ["#ff5050","#53b5e6","#ffd454","#b2e673","#ff87e6","#7c85ee"];
+    const STROKE_COLOR = "#253146";
+    const CENTER = 200, RADIUS = 160, LABEL_RADIUS = 120, MIN_SEG = 2, MAX_SEG = 6;
+    let segmentCount = 2;
+    let labels = ["당첨", "꽝", "", "", "", ""];
+    let spinning = false, ready = false, animationId = null, angle = 0, speed = 9;
+    let shotIndex = null;
+    let shotMarks = [false, false, false, false, false, false];
+    let lastLabels = ["당첨", "꽝", "", "", "", ""];
 
-<h1>⭐ 사격회전판 1.2</h1>
+    const roulette = document.getElementById("roulette");
+    const updateBtn = document.getElementById("update-btn");
+    const shootBtn = document.getElementById("shoot-btn");
+    const resultDiv = document.getElementById("result");
+    const inputEls = [];
+    for (let i = 0; i < MAX_SEG; i++) inputEls.push(document.getElementById("input"+i));
+    const bgm = document.getElementById('bgm');
+    const bgmOn = document.getElementById('bgmOn');
+    const bgmOff = document.getElementById('bgmOff');
+    bgm.volume = 0.35;
+    bgmOn.onclick = () => {
+      bgm.play();
+      bgmOn.disabled = true; bgmOff.disabled = false;
+    };
+    bgmOff.onclick = () => {
+      bgm.pause(); bgm.currentTime = 0;
+      bgmOn.disabled = false; bgmOff.disabled = true;
+    };
+    function setBgmBtnState() {
+      if (bgm.paused) { bgmOn.disabled = false; bgmOff.disabled = true; }
+      else { bgmOn.disabled = true; bgmOff.disabled = false; }
+    }
+    bgm.addEventListener('play', setBgmBtnState);
+    bgm.addEventListener('pause', setBgmBtnState);
+    setBgmBtnState();
 
-<!-- 🔊 BGM 제어 버튼 -->
-<button onclick="playBGM()">🎵 BGM 시작</button>
-<button onclick="stopBGM()">🛑 BGM 끄기</button>
-<audio id="bgm" loop>
-  <source src="https://www.bensound.com/bensound-music/bensound-energy.mp3" type="audio/mpeg">
-</audio>
-
-<div id="inputs">
-  <p>룰렛에 들어갈 내용을 입력하고 업데이트를 누르면 적용됩니다. 회전판이 돌아가면 사격하세요.</p>
-  <input id="seg0" value="내용">
-  <input id="seg1" value="이">
-  <input id="seg2" value="없으면">
-  <input id="seg3" value="비워">
-  <input id="seg4" value="두세요">
-  <input id="seg5" value="">
-  <br>
-  <button onclick="updateWheel()">업데이트</button>
-</div>
-
-<div id="roulette-container">
-  <div id="indicator"></div>
-  <svg viewBox="0 0 400 400"><g id="wheelGroup"></g></svg>
-  <div id="star">★</div>
-</div>
-
-<div>
-  <button onclick="fire()" id="fireBtn">발사!</button>
-  <button onclick="startRotation()" id="restartBtn" style="display:none;">다시 시작</button>
-</div>
-
-<div id="result"></div>
-
-<script>
-  const wheelGroup = document.getElementById('wheelGroup');
-  const star = document.getElementById('star');
-  const result = document.getElementById('result');
-  let activeTexts = [];
-  let segments = [];
-  let rotation = 0;
-  let interval = null;
-
-  const colors = ['#f66', '#6f6', '#66f', '#ff6', '#f6f', '#6ff'];
-
-  function polarToCartesian(cx, cy, r, angle) {
-    const rad = (angle - 90) * Math.PI / 180;
-    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
-  }
-
-  function describeArc(x, y, r, startAngle, endAngle) {
-    const start = polarToCartesian(x, y, r, endAngle);
-    const end = polarToCartesian(x, y, r, startAngle);
-    const largeArc = endAngle - startAngle > 180 ? 1 : 0;
-    return `M${x},${y} L${start.x},${start.y} A${r},${r} 0 ${largeArc},0 ${end.x},${end.y} Z`;
-  }
-
-  function updateWheel() {
-    stopRotation();
-    document.getElementById("restartBtn").style.display = "none";
-    document.getElementById("fireBtn").disabled = false;
-    star.style.transform = "scale(0)";
-    result.textContent = "";
-
-    activeTexts = [];
-    for (let i = 0; i < 6; i++) {
-      const val = document.getElementById(`seg${i}`).value.trim();
-      if (val) activeTexts.push(val);
+    function getContrastColor(hex) {
+      const rgb = parseInt(hex.replace("#", ""), 16);
+      const r = (rgb >> 16) & 0xff, g = (rgb >> 8) & 0xff, b = rgb & 0xff;
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+      return brightness > 160 ? "#222" : "#fff";
     }
 
-    if (activeTexts.length < 2) {
-      alert("최소 2개 이상의 항목을 입력하세요.");
-      return;
+    function bulletHoleSVG() {
+      return `
+      <svg width="38" height="38" viewBox="0 0 38 38">
+        <circle cx="19" cy="19" r="7" fill="#363636" stroke="#222" stroke-width="2"/>
+        <circle cx="19" cy="19" r="7.9" fill="none" stroke="#bbb" stroke-width="1.2" opacity="0.24"/>
+        <circle cx="19" cy="19" r="11.5" fill="none" stroke="#222" stroke-width="1.2" opacity="0.15"/>
+        <ellipse cx="22" cy="16" rx="1.5" ry="0.5" fill="#fff" opacity="0.18" />
+        <ellipse cx="17" cy="22" rx="1.2" ry="0.5" fill="#fff" opacity="0.12" />
+      </svg>`;
     }
 
-    drawWheel();
-    startRotation();
-  }
+    function drawRoulette() {
+      roulette.innerHTML = '';
+      const anglePer = 360 / segmentCount;
+      for (let i = 0; i < segmentCount; i++) {
+        const startAngle = (anglePer * i - 90) * Math.PI/180;
+        const endAngle = (anglePer * (i+1) - 90) * Math.PI/180;
+        const x1 = CENTER + RADIUS * Math.cos(startAngle);
+        const y1 = CENTER + RADIUS * Math.sin(startAngle);
+        const x2 = CENTER + RADIUS * Math.cos(endAngle);
+        const y2 = CENTER + RADIUS * Math.sin(endAngle);
+        const d = [
+          `M ${CENTER},${CENTER}`,
+          `L ${x1},${y1}`,
+          `A ${RADIUS},${RADIUS} 0 0 1 ${x2},${y2}`,
+          'Z'
+        ].join(' ');
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", d);
+        path.setAttribute("fill", COLORS[i % COLORS.length]);
+        path.setAttribute("stroke", STROKE_COLOR);
+        path.setAttribute("stroke-width", "4");
+        roulette.appendChild(path);
 
-  function drawWheel() {
-    wheelGroup.innerHTML = '';
-    segments = [];
-    const count = activeTexts.length;
+        const midAngle = ((anglePer * i + anglePer/2) - 90) * Math.PI/180;
+        const tx = CENTER + LABEL_RADIUS * Math.cos(midAngle);
+        const ty = CENTER + LABEL_RADIUS * Math.sin(midAngle) + 7;
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", tx);
+        text.setAttribute("y", ty);
+        text.setAttribute("text-anchor", "middle");
+        text.setAttribute("dominant-baseline", "middle");
+        text.setAttribute("font-size", "22");
+        text.setAttribute("font-weight", "700");
+        text.setAttribute("fill", getContrastColor(COLORS[i % COLORS.length]));
+        text.textContent = labels[i] ? labels[i] : "-";
+        roulette.appendChild(text);
 
-    for (let i = 0; i < count; i++) {
-      const start = (i * 360) / count;
-      const end = ((i + 1) * 360) / count;
+        if (shotMarks[i]) {
+          const bh = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject");
+          const rx = CENTER + (LABEL_RADIUS-16) * Math.cos(midAngle) - 19;
+          const ry = CENTER + (LABEL_RADIUS-16) * Math.sin(midAngle) - 19;
+          bh.setAttribute("x", rx);
+          bh.setAttribute("y", ry);
+          bh.setAttribute("width", 38);
+          bh.setAttribute("height", 38);
+          bh.innerHTML = bulletHoleSVG();
+          roulette.appendChild(bh);
+        }
+      }
+      const centerCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      centerCircle.setAttribute("cx", CENTER);
+      centerCircle.setAttribute("cy", CENTER);
+      centerCircle.setAttribute("r", "26");
+      centerCircle.setAttribute("fill", "#293355");
+      centerCircle.setAttribute("stroke", "#aaa");
+      centerCircle.setAttribute("stroke-width", "2.3");
+      roulette.appendChild(centerCircle);
 
-      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      path.setAttribute("d", describeArc(200, 200, 190, start, end));
-      path.setAttribute("fill", colors[i % colors.length]);
-      wheelGroup.appendChild(path);
-      segments.push(path);
+      const outerCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      outerCircle.setAttribute("cx", CENTER);
+      outerCircle.setAttribute("cy", CENTER);
+      outerCircle.setAttribute("r", RADIUS + 6);
+      outerCircle.setAttribute("fill", "none");
+      outerCircle.setAttribute("stroke", "#7c85ee");
+      outerCircle.setAttribute("stroke-width", "2.1");
+      roulette.appendChild(outerCircle);
 
-      const angle = (start + end) / 2;
-      const pos = polarToCartesian(200, 200, 120, angle);
-      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      text.setAttribute("x", pos.x);
-      text.setAttribute("y", pos.y);
-      text.setAttribute("text-anchor", "middle");
-      text.setAttribute("alignment-baseline", "middle");
-      text.setAttribute("font-size", "14");
-      text.setAttribute("fill", "black");
-      text.textContent = activeTexts[i];
-      wheelGroup.appendChild(text);
+      roulette.style.transform = `rotate(${angle}deg)`;
+      roulette.style.transition = '';
     }
-  }
 
-  function startRotation() {
-    if (interval) clearInterval(interval);
-    document.getElementById("fireBtn").disabled = false;
-    star.style.transform = "scale(0)";
-    result.textContent = "";
-    interval = setInterval(() => {
-      rotation = (rotation + Math.floor(Math.random() * 20 + 10)) % 360;
-      wheelGroup.setAttribute('transform', `rotate(${rotation},200,200)`);
-    }, 30);
-  }
-
-  function stopRotation() {
-    if (interval) {
-      clearInterval(interval);
-      interval = null;
+    function updateSegments() {
+      labels = [];
+      segmentCount = 0;
+      for(let i=0; i<MAX_SEG; i++) {
+        const txt = inputEls[i].value.trim();
+        if (txt) {
+          labels.push(txt);
+          segmentCount++;
+        }
+      }
+      if (segmentCount < 2) {
+        segmentCount = 2;
+        labels = ["항목1", "항목2"];
+      }
+      cancelAnimationFrame(animationId);
+      spinning = false; ready = false; angle = 0; speed = 9; shotIndex = null;
+      shotMarks = Array(MAX_SEG).fill(false);
+      lastLabels = labels.slice();
+      drawRoulette();
+      resultDiv.textContent = '';
+      shootBtn.textContent = "사격 준비";
+      shootBtn.disabled = false;
     }
-  }
 
-  function fire() {
-    stopRotation();
-    document.getElementById("fireBtn").disabled = true;
+    function rotateLoop() {
+      if (!spinning) return;
+      angle = (angle + speed) % 360;
+      drawRoulette();
+      animationId = requestAnimationFrame(rotateLoop);
+      if (ready && speed > 1) speed *= 0.985;
+      else if (ready && speed <= 1.1) {
+        spinning = false;
+        shootBtn.disabled = false;
+        shootBtn.textContent = "사격 준비";
+        speed = 9;
+      }
+    }
 
-    const count = activeTexts.length;
-    const sliceAngle = 360 / count;
-    const randomSector = Math.floor(Math.random() * count);
-    const sectorAngle = randomSector * sliceAngle + sliceAngle / 2;
+    shootBtn.onclick = () => {
+      // 항상 새 게임 준비: ready=true(이전 게임 끝)여도 즉시 새게임 가능하게
+      if (!spinning) {
+        labels = lastLabels.slice();
+        segmentCount = labels.length;
+        spinning = true; ready = false; angle = 0; speed = 9; shotIndex = null;
+        shotMarks = Array(MAX_SEG).fill(false);
+        drawRoulette();
+        shootBtn.textContent = "사격!";
+        shootBtn.disabled = false;
+        resultDiv.textContent = '';
+        rotateLoop();
+      } else if (spinning && !ready) {
+        const anglePer = 360 / segmentCount;
+        let a = (360 - (angle % 360) + 360) % 360;
+        let idx = Math.floor((a + anglePer/2) / anglePer) % segmentCount;
+        shotIndex = idx;
+        shotMarks[idx] = true;
+        drawRoulette();
+        resultDiv.textContent = `🎯 [${labels[idx]}] 당첨!`;
+        ready = true;
+        shootBtn.disabled = true;
+      }
+    };
 
-    const adjusted = (sectorAngle - rotation + 360) % 360;
-    const index = Math.floor(adjusted / sliceAngle) % count;
-    const hitText = activeTexts[index];
-
-    const pos = polarToCartesian(200, 200, 140, sectorAngle);
-    star.style.left = (pos.x - 18) + "px";
-    star.style.top = (pos.y - 18) + "px";
-    star.style.transform = `scale(1)`;
-
-    segments.forEach(seg => seg.classList.remove("highlight"));
-    segments[index].classList.add("highlight");
-
-    result.textContent = `★ 명중: "${hitText}"`;
-    document.getElementById("restartBtn").style.display = "inline-block";
-  }
-
-  function playBGM() {
-    const audio = document.getElementById("bgm");
-    audio.volume = 0.3; // 🔉 기본 음량 낮춤
-    audio.play();
-  }
-
-  function stopBGM() {
-    const audio = document.getElementById("bgm");
-    audio.pause();
-  }
-
-  updateWheel();
-</script>
-
-
-<div style="margin-top: 40px;">
-  <a href="index.html" style="color: #aaa; text-decoration: none;">← 메인페이지로 돌아가기</a>
-</div>
+    updateBtn.onclick = updateSegments;
+    for(let i=0; i<MAX_SEG; i++) inputEls[i].oninput = () => {};
+    window.onload = updateSegments;
+  </script>
 </body>
 </html>

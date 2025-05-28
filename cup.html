@@ -2,226 +2,482 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>컵속동전2.1</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>컵 속 동전 찾기</title>
   <style>
     body {
       margin: 0;
-      background-color: #1e1e2f;
-      font-family: sans-serif;
+      background: #1e1e2f;
+      font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+      min-height: 100vh;
+      color: #fff;
       display: flex;
       flex-direction: column;
       align-items: center;
-      color: white;
-      overflow: hidden;
     }
-
+    #container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100vw;
+      min-height: 100vh;
+    }
     h1 {
-      margin-top: 30px;
+      margin: 40px 0 0 0;
+      text-align: center;
+      font-size: 2em;
+      letter-spacing: 1px;
     }
-
     #bgm-controls {
-      margin-top: 10px;
+      margin-top: 22px;
+      margin-bottom: 0px;
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
     }
-
+    .bgm-btn {
+      padding: 6px 15px;
+      font-size: 10px;
+      background: #5baaff;
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+      outline: none;
+      min-width: 48px;
+      min-height: 22px;
+    }
+    .bgm-btn:disabled {
+      background: #ccc;
+      color: #888;
+      cursor: not-allowed;
+    }
     #message {
-      margin-top: 20px;
+      margin: 14px 0 10px 0; /* 테이블과 가깝지만 가독성 위한 적당한 여백 */
+      width: 100%;
+      text-align: center;
       font-size: 20px;
-      height: 30px;
+      height: 28px;
+      font-weight: 500;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-width: 320px;
     }
-
-    #game {
+    #game-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100vw;
+      max-width: 600px;
+      height: 260px;
       position: relative;
-      width: 600px;
-      height: 300px;
-      background: linear-gradient(to bottom, #004466 0%, #003355 100%);
-      margin-top: 20px;
-      border-radius: 12px;
-      box-shadow: inset 0 8px 12px rgba(0, 0, 0, 0.5);
     }
-
+    #game-table {
+      width: 95vw;
+      max-width: 540px;
+      height: 180px;
+      background: linear-gradient(to bottom, #0f283e 0%, #1e3955 100%);
+      border-radius: 20px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.28), inset 0 10px 24px rgba(0,0,0,0.16);
+      position: relative;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
     .cup-outer {
       position: absolute;
-      transition: left 0.5s ease;
-      bottom: 30px;
-      width: 70px;
-      height: 90px;
+      transition: left 0.5s cubic-bezier(.64,.09,.36,.95);
+      bottom: 25px;
+      pointer-events: auto;
     }
-
     .cup {
+      width: 68px; height: 88px;
+      background: #fff;
+      border-radius: 0 0 36px 36px;
+      box-shadow: 0 10px 22px rgba(0,0,0,0.38);
       position: relative;
-      width: 70px;
-      height: 90px;
-      background: white;
-      border-radius: 0 0 40px 40px;
-      box-shadow: 0px 8px 10px rgba(0, 0, 0, 0.4);
       cursor: pointer;
+      display: flex; align-items: flex-end; justify-content: center;
+      transition: transform 0.14s cubic-bezier(.43,1.53,.4,.93);
+      opacity: 1;
     }
-
+    .cup.clicked {
+      transform: scale(1.08) rotate(-3deg);
+      box-shadow: 0 14px 36px #fff3, 0 2px 8px gold;
+    }
+    .cup.disabled {
+      pointer-events: none;
+      opacity: 0.58;
+      filter: grayscale(30%);
+    }
     .coin {
       position: absolute;
-      top: 50px;
+      top: 54px;
       left: 50%;
       transform: translateX(-50%);
-      width: 20px;
-      height: 20px;
+      width: 22px; height: 22px;
       background: gold;
       border-radius: 50%;
-      box-shadow: 0 0 5px gold;
+      box-shadow: 0 0 6px 2px gold, 0 1px 9px 1px #eaa623bb;
       display: none;
+      z-index: 2;
     }
-
-    .show-coin .coin {
-      display: block;
+    .show-coin .coin { display: block; }
+    .show-empty::after {
+      content: "❌";
+      position: absolute; left: 50%; top: 64px;
+      transform: translateX(-50%);
+      color: #e09;
+      font-size: 24px;
     }
-
     #controls {
-      margin-top: 20px;
+      margin-top: 18px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      width: 100%;
     }
-
     button {
-      padding: 10px 20px;
-      font-size: 16px;
+      padding: 12px 30px;
+      font-size: 18px;
+      background: #5baaff;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
       cursor: pointer;
-      margin: 0 5px;
+      transition: background 0.15s;
+      outline: none;
     }
+    button:disabled {
+      background: #ccc;
+      color: #888;
+      cursor: not-allowed;
+    }
+    #difficulty-controls {
+      margin: 16px 0 0 0;
+      display: flex;
+      gap: 13px;
+      justify-content: center;
+      align-items: center;
+    }
+    .diff-btn {
+      padding: 4px 11px;
+      font-size: 9.5px;
+      border-radius: 6px;
+      border: none;
+      background: #88aaf7;
+      color: #fff;
+      cursor: pointer;
+      font-weight: 600;
+      opacity: 0.82;
+      min-width: 38px;
+      min-height: 20px;
+      transition: background 0.2s, opacity 0.2s;
+    }
+    .diff-btn.active {
+      background: #3c69ec;
+      color: #fff;
+      opacity: 1;
+    }
+    @media (max-width: 600px) {
+      #game-table { width: 98vw; max-width: none; height: 130px; }
+      .cup { width: 42px; height: 54px; }
+      .coin { width: 14px; height: 14px; top: 33px;}
+      .show-empty::after { top: 39px; font-size: 15px; }
+      #message { min-width: 160px; font-size: 15px; margin: 9px 0 9px 0; }
+      .bgm-btn { padding: 4px 10px; font-size: 8px; min-width: 32px; min-height: 16px;}
+      .diff-btn { padding: 3px 7px; font-size: 7.5px; min-width: 26px; min-height: 15px;}
+      #difficulty-controls { margin-top: 9px; }
+      #controls { margin-top: 9px; }
+    }
+    a { color: #cce; text-decoration: none; }
+    a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
-  <h1>컵 속 동전 찾기</h1>
-  <div id="bgm-controls">
-    <button id="bgmOn">🎵 BGM 켜기</button>
-    <button id="bgmOff">🔇 BGM 끄기</button>
+  <div id="container">
+    <h1>컵 속 동전 찾기</h1>
+    <div id="bgm-controls">
+      <button id="bgmOn" class="bgm-btn">🎵 BGM 켜기</button>
+      <button id="bgmOff" class="bgm-btn">🔇 BGM 끄기</button>
+    </div>
+    <div id="message">동전이 들어 있는 컵을 잘 기억하세요!</div>
+    <div id="game-area">
+      <div id="game-table"></div>
+    </div>
+    <div id="controls">
+      <button id="startBtn">게임 시작</button>
+    </div>
+    <div id="difficulty-controls">
+      <button class="diff-btn active" id="easyBtn">쉬움</button>
+      <button class="diff-btn" id="hardBtn">어려움</button>
+    </div>
+    <div style="margin-top: 38px;">
+      <a href="index.html">← 메인페이지로 돌아가기</a>
+    </div>
+    <!-- BGM 오디오 -->
+    <audio id="bgm" loop>
+      <source src="https://www.bensound.com/bensound-music/bensound-energy.mp3" type="audio/mpeg">
+    </audio>
   </div>
-  <div id="message">동전이 들어 있는 컵을 잘 기억하세요!</div>
-  <div id="game"></div>
-
-  <div id="controls">
-    <button id="startBtn">게임 시작</button>
-  </div>
-
-  <audio id="bgm" loop>
-    <source src="https://www.bensound.com/bensound-music/bensound-energy.mp3" type="audio/mpeg">
-  </audio>
-
   <script>
-    const game = document.getElementById("game");
-    const message = document.getElementById("message");
-    const startBtn = document.getElementById("startBtn");
-    const bgmOn = document.getElementById("bgmOn");
-    const bgmOff = document.getElementById("bgmOff");
-    const bgm = document.getElementById("bgm");
+    // --- 상태 및 변수 ---
+    let state = {
+      numCups: 5,
+      positions: [],
+      cupWidth: 68,
+      gap: 32,
+      coinIndex: -1,
+      isClickable: false,
+      isShuffling: false,
+      started: false,
+      cups: [],
+      shuffleTimer: null,
+      shuffleCount: 14,  // 쉬움: 14, 어려움: 28
+      shuffleSpeed: 400, // 쉬움: 400, 어려움: 200
+      tableWidth: 540,
+      difficulty: "easy" // "easy" | "hard"
+    };
 
-    const cupPositions = [40, 140, 240, 340, 440];
-    const offset = 10;
-    const adjustedPositions = cupPositions.map(p => p + offset);
-
-    let cupWrappers = [];
-    let coinIndex = -1;
-    let isClickable = false;
-
+    const gameTable = document.getElementById('game-table');
+    const message = document.getElementById('message');
+    const startBtn = document.getElementById('startBtn');
+    // BGM 제어
+    const bgm = document.getElementById('bgm');
+    const bgmOn = document.getElementById('bgmOn');
+    const bgmOff = document.getElementById('bgmOff');
     bgm.volume = 0.3;
 
-    function setupCups() {
-      game.innerHTML = "";
-      cupWrappers = [];
+    bgmOn.onclick = () => {
+      bgm.play();
+      bgmOn.disabled = true;
+      bgmOff.disabled = false;
+    };
+    bgmOff.onclick = () => {
+      bgm.pause();
+      bgm.currentTime = 0;
+      bgmOn.disabled = false;
+      bgmOff.disabled = true;
+    };
 
-      for (let i = 0; i < adjustedPositions.length; i++) {
-        const wrapper = document.createElement("div");
-        wrapper.classList.add("cup-outer");
-        wrapper.style.left = adjustedPositions[i] + "px";
-        wrapper.dataset.index = i;
-
-        const cup = document.createElement("div");
-        cup.classList.add("cup");
-
-        const coin = document.createElement("div");
-        coin.classList.add("coin");
-
-        cup.appendChild(coin);
-        wrapper.appendChild(cup);
-        game.appendChild(wrapper);
-        cupWrappers.push(wrapper);
+    // BGM 버튼 상태 초기화
+    function setBgmBtnState() {
+      if (bgm.paused) {
+        bgmOn.disabled = false;
+        bgmOff.disabled = true;
+      } else {
+        bgmOn.disabled = true;
+        bgmOff.disabled = false;
       }
+    }
+    bgm.addEventListener('play', setBgmBtnState);
+    bgm.addEventListener('pause', setBgmBtnState);
+    setBgmBtnState();
 
-      cupWrappers.forEach((wrapper) => {
-        wrapper.onclick = () => {
-          if (!isClickable) return;
-          isClickable = false;
-          startBtn.disabled = false;
+    // 난이도 버튼
+    const easyBtn = document.getElementById('easyBtn');
+    const hardBtn = document.getElementById('hardBtn');
 
-          if (parseInt(wrapper.dataset.index) === coinIndex) {
-            message.textContent = "🎉 정답입니다!";
-          } else {
-            message.textContent = "❌ 당신의 선택은 틀렸습니다.";
-            cupWrappers[coinIndex].firstChild.classList.add("show-coin");
-          }
-        };
-      });
+    easyBtn.onclick = () => {
+      if(state.difficulty === "easy" || state.started) return;
+      setDifficulty("easy");
+    };
+    hardBtn.onclick = () => {
+      if(state.difficulty === "hard" || state.started) return;
+      setDifficulty("hard");
+    };
+
+    function setDifficulty(level) {
+      if(level === "easy") {
+        state.difficulty = "easy";
+        state.shuffleCount = 14;
+        state.shuffleSpeed = 400;
+        easyBtn.classList.add("active");
+        hardBtn.classList.remove("active");
+      } else {
+        state.difficulty = "hard";
+        state.shuffleCount = 28;
+        state.shuffleSpeed = 200;
+        easyBtn.classList.remove("active");
+        hardBtn.classList.add("active");
+      }
+      drawInitialCups();
     }
 
-    function shuffleCups() {
-      message.textContent = "컵을 섞습니다...";
-      let count = 0;
-      const maxShuffles = 12;
+    // 중앙정렬용 위치 계산
+    function getCupPositions(num, tableWidth, cupWidth, gap) {
+      const totalWidth = num * cupWidth + (num - 1) * gap;
+      const startX = (tableWidth - totalWidth) / 2;
+      return Array.from({ length: num }, (_, i) =>
+        Math.round(startX + i * (cupWidth + gap))
+      );
+    }
 
-      const interval = setInterval(() => {
-        let i = Math.floor(Math.random() * cupWrappers.length);
-        let j;
-        do {
-          j = Math.floor(Math.random() * cupWrappers.length);
-        } while (i === j);
+    // 게임 전(초기상태)에는 컵은 보이지만 클릭불가, 동전 없음
+    function drawInitialCups() {
+      const tableWidth = gameTable.offsetWidth;
+      state.tableWidth = tableWidth;
+      state.positions = getCupPositions(state.numCups, tableWidth, state.cupWidth, tableWidth < 400 ? 12 : state.gap);
+      gameTable.innerHTML = '';
+      state.cups = [];
+      for (let i = 0; i < state.numCups; i++) {
+        const outer = document.createElement('div');
+        outer.className = 'cup-outer';
+        outer.style.left = state.positions[i] + "px";
+        outer.dataset.idx = i;
+        const cup = document.createElement('div');
+        cup.className = 'cup disabled';
+        cup.tabIndex = -1;
+        const coin = document.createElement('div');
+        coin.className = 'coin';
+        cup.appendChild(coin);
+        outer.appendChild(cup);
+        gameTable.appendChild(outer);
+        state.cups.push(outer);
+      }
+      state.isClickable = false;
+      state.isShuffling = false;
+      state.started = false;
+      state.coinIndex = -1;
+    }
 
-        const tempLeft = cupWrappers[i].style.left;
-        cupWrappers[i].style.left = cupWrappers[j].style.left;
-        cupWrappers[j].style.left = tempLeft;
+    function setupCups(showCoin = false) {
+      // 게임 진행용: 클릭 가능, 동전 표시 선택적
+      const tableWidth = gameTable.offsetWidth;
+      state.tableWidth = tableWidth;
+      state.positions = getCupPositions(state.numCups, tableWidth, state.cupWidth, tableWidth < 400 ? 12 : state.gap);
+      gameTable.innerHTML = '';
+      state.cups = [];
+      for (let i = 0; i < state.numCups; i++) {
+        const outer = document.createElement('div');
+        outer.className = 'cup-outer';
+        outer.style.left = state.positions[i] + "px";
+        outer.dataset.idx = i;
+        const cup = document.createElement('div');
+        cup.className = 'cup';
+        cup.tabIndex = 0;
+        const coin = document.createElement('div');
+        coin.className = 'coin';
+        if (showCoin && i === state.coinIndex) cup.classList.add('show-coin');
+        cup.appendChild(coin);
+        outer.appendChild(cup);
+        gameTable.appendChild(outer);
+        state.cups.push(outer);
+        // 클릭 이벤트 할당
+        cup.onclick = handleCupClick;
+        cup.onmousedown = () => cup.classList.add('clicked');
+        cup.onmouseup = () => cup.classList.remove('clicked');
+        cup.onmouseleave = () => cup.classList.remove('clicked');
+      }
+    }
 
-        [cupWrappers[i].dataset.index, cupWrappers[j].dataset.index] =
-          [cupWrappers[j].dataset.index, cupWrappers[i].dataset.index];
-
-        [cupWrappers[i], cupWrappers[j]] = [cupWrappers[j], cupWrappers[i]];
-
-        count++;
-        if (count >= maxShuffles) {
-          clearInterval(interval);
-          message.textContent = "이제 선택하세요!";
-          isClickable = true;
-        }
-      }, 400);
+    function clearShuffle() {
+      if (state.shuffleTimer) clearInterval(state.shuffleTimer);
+      state.shuffleTimer = null;
     }
 
     function startGame() {
+      clearShuffle();
+      message.textContent = '동전이 들어 있는 컵을 잘 기억하세요!';
       startBtn.disabled = true;
-      setupCups();
-      message.textContent = "동전이 들어 있는 컵을 잘 기억하세요!";
-      coinIndex = Math.floor(Math.random() * cupWrappers.length);
-      cupWrappers[coinIndex].firstChild.classList.add("show-coin");
-
+      startBtn.textContent = "게임 중...";
+      // 동전 위치 랜덤
+      state.coinIndex = Math.floor(Math.random() * state.numCups);
+      state.isClickable = false;
+      state.isShuffling = false;
+      state.started = true;
+      setupCups(true); // 동전 2초간 표시
+      // 2초 뒤 컵 가리고 섞기
       setTimeout(() => {
-        cupWrappers[coinIndex].firstChild.classList.remove("show-coin");
+        setupCups(false);
         shuffleCups();
       }, 2000);
     }
 
-    function enableBGM() {
-      bgm.play();
+    function shuffleCups() {
+      let count = 0;
+      message.textContent = "컵을 섞습니다...";
+      state.isShuffling = true;
+      state.shuffleTimer = setInterval(() => {
+        let i = Math.floor(Math.random() * state.numCups);
+        let j;
+        do { j = Math.floor(Math.random() * state.numCups); } while (i === j);
+        // 위치 swap (left 애니메이션)
+        let leftA = state.cups[i].style.left, leftB = state.cups[j].style.left;
+        state.cups[i].style.left = leftB;
+        state.cups[j].style.left = leftA;
+        // cups 배열 swap
+        [state.cups[i], state.cups[j]] = [state.cups[j], state.cups[i]];
+        // coinIndex도 swap (동전의 실제 위치 추적!)
+        if (state.coinIndex === i) state.coinIndex = j;
+        else if (state.coinIndex === j) state.coinIndex = i;
+        count++;
+        if (count >= state.shuffleCount) {
+          clearShuffle();
+          state.isShuffling = false;
+          state.isClickable = true;
+          message.textContent = '이제 컵을 선택하세요!';
+          startBtn.disabled = false;
+          startBtn.textContent = "다시 시작";
+          state.started = false;
+        }
+      }, state.shuffleSpeed);
     }
 
-    function disableBGM() {
-      bgm.pause();
-      bgm.currentTime = 0;
+    function handleCupClick(event) {
+      if (!state.isClickable || state.isShuffling) return;
+      state.isClickable = false;
+      // 현재 클릭된 컵이 state.cups 배열에서 몇 번째인지 직접 검색
+      const outer = event.target.closest('.cup-outer');
+      const idx = state.cups.indexOf(outer);
+      // 클릭 효과
+      let cupEl = state.cups[idx].firstChild;
+      cupEl.classList.add('clicked');
+      setTimeout(() => cupEl.classList.remove('clicked'), 150);
+      // 모든 컵 결과 공개
+      revealCups(idx);
+      state.started = false;
     }
 
-    bgmOn.onclick = enableBGM;
-    bgmOff.onclick = disableBGM;
+    function revealCups(selectedIdx) {
+      state.cups.forEach((wrapper, idx) => {
+        const cup = wrapper.firstChild;
+        if (idx == state.coinIndex) cup.classList.add('show-coin');
+        else cup.classList.add('show-empty');
+      });
+      if (selectedIdx == state.coinIndex) {
+        message.textContent = "🎉 정답입니다!";
+      } else {
+        message.textContent = "❌ 틀렸습니다!";
+      }
+    }
+
+    // 리사이즈 대응
+    window.addEventListener('resize', () => {
+      if (!state.started && !state.isClickable && !state.isShuffling) drawInitialCups();
+      else if (state.started || state.isClickable || state.isShuffling) {
+        // 컵 위치만 재조정
+        const tableWidth = gameTable.offsetWidth;
+        state.positions = getCupPositions(state.numCups, tableWidth, state.cupWidth, tableWidth < 400 ? 12 : state.gap);
+        state.cups.forEach((w, i) => {
+          w.style.left = state.positions[i] + 'px';
+        });
+      }
+    });
+
+    // 최초 진입시: 항상 컵 보임, 클릭불가
+    drawInitialCups();
+
     startBtn.onclick = startGame;
 
-    setupCups();
-    coinIndex = Math.floor(Math.random() * cupWrappers.length);
-    cupWrappers[coinIndex].firstChild.classList.add("show-coin");
   </script>
-
-  <div style="margin-top: 40px;">
-    <a href="index.html" style="color: #aaa; text-decoration: none;">← 메인페이지로 돌아가기</a>
-  </div>
 </body>
 </html>

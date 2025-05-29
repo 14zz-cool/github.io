@@ -120,7 +120,10 @@
     const CENTER = 200, RADIUS = 160, LABEL_RADIUS = 120, MIN_SEG = 2, MAX_SEG = 6;
     let segmentCount = 2;
     let labels = ["당첨", "꽝", "", "", "", ""];
-    let spinning = false, ready = false, animationId = null, angle = 0, speed = 9;
+    let spinning = false, ready = false, animationId = null, angle = 0;
+    let baseSpeed = 13;                        // [NEW] 기본 회전 속도
+    let speed = baseSpeed;                    // [NEW] 현재 회전 속도
+    let speedBoostStartTime = null;           // [NEW] 속도 증가 시작 시간
     let shotIndex = null;
     let shotMarks = [false, false, false, false, false, false];
     let lastLabels = ["당첨", "꽝", "", "", "", ""];
@@ -255,7 +258,7 @@
         labels = ["항목1", "항목2"];
       }
       cancelAnimationFrame(animationId);
-      spinning = false; ready = false; angle = 0; speed = 9; shotIndex = null;
+      spinning = false; ready = false; angle = 0; speed = baseSpeed; shotIndex = null;
       shotMarks = Array(MAX_SEG).fill(false);
       lastLabels = labels.slice();
       drawRoulette();
@@ -266,15 +269,27 @@
 
     function rotateLoop() {
       if (!spinning) return;
+
+      // [중요] 사격 버튼 누르기 전(ready==false)에만 부스터 적용
+      if (!ready && speedBoostStartTime !== null) {
+        const elapsed = (Date.now() - speedBoostStartTime) / 1000;
+        const boostSteps = Math.floor(elapsed / 5);
+        const boostFactor = Math.min(1 + 0.1 * boostSteps, 2);
+        speed = baseSpeed * boostFactor;
+      }
+
       angle = (angle + speed) % 360;
       drawRoulette();
       animationId = requestAnimationFrame(rotateLoop);
+
+      // ready==true일 때 감속 및 멈춤(부스터 적용 안함)
       if (ready && speed > 1) speed *= 0.985;
       else if (ready && speed <= 1.1) {
         spinning = false;
         shootBtn.disabled = false;
         shootBtn.textContent = "사격 준비";
-        speed = 9;
+        speed = baseSpeed;
+        speedBoostStartTime = null;
       }
     }
 
@@ -283,7 +298,8 @@
       if (!spinning) {
         labels = lastLabels.slice();
         segmentCount = labels.length;
-        spinning = true; ready = false; angle = 0; speed = 9; shotIndex = null;
+        spinning = true; ready = false; angle = 0; speed = baseSpeed; shotIndex = null;
+        speedBoostStartTime = Date.now(); // [중요] 회전 시작 시점
         shotMarks = Array(MAX_SEG).fill(false);
         drawRoulette();
         shootBtn.textContent = "사격!";

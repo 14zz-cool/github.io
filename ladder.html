@@ -185,6 +185,19 @@
     <h1>사다리 게임</h1>
     <div class="inputs-row" id="player-inputs-row"></div>
     <button class="update-btn" id="updateBtn">업데이트</button>
+    
+    <!-- 안내문 시작 -->
+    <div id="howToArea" class="ladder-canvas-area" style="min-height: 160px;">
+      <ol style="color:#fff;font-size:1.1em;line-height:1.7;margin: 30px 0 30px 30px; padding-left:15px;">
+        <li>참가자 입력창에 원하는 만큼 번호를 입력하세요.</li>
+        <li>'업데이트' 버튼을 누르면 사다리와 결과값이 나타납니다.</li>
+        <li>결과갑 입력창을 채우면 '번호 버튼'이 나타납니다.</li>
+        <li>번호를 선택하고 '게임 시작'을 누르세요.</li>
+        <li>게임 종료후, 초기화는 '업데이트' 버튼을 누르세요.</li>
+      </ol>
+    </div>
+    <!-- 안내문 끝 -->
+
     <div class="ladder-canvas-area" id="ladderCanvasArea" style="display:none;">
       <canvas id="ladder-canvas" width="560" height="320"></canvas>
     </div>
@@ -222,6 +235,11 @@
     const choiceModal = document.getElementById('choiceModal');
     const retryBtn = document.getElementById('retryBtn');
     const continueBtn = document.getElementById('continueBtn');
+    const howToArea = document.getElementById('howToArea'); // 안내문 영역
+
+    // 최초 진입시 안내문만 보이고 사다리 UI 숨김
+    ladderCanvasArea.style.display = 'none';
+    howToArea.style.display = 'flex';
 
     let players = Array(PLAYER_COUNT).fill('');
     let results = [];
@@ -269,7 +287,19 @@
       usedCount = players.filter(v => v).length;
       renderResultInputs(usedCount);
       systemMsgArea.textContent = '';
-      ladderCanvasArea.style.display = usedCount >= 2 ? 'flex' : 'none';
+      
+      // 안내문/사다리 UI 표시 전환
+      if (usedCount >= 2) {
+        howToArea.style.display = 'none';              // 안내문 숨기기
+        ladderCanvasArea.style.display = 'flex';        // 사다리 UI 보이기
+        makeLadder(usedCount, ladderHeight);
+        currentLadderBackup = JSON.parse(JSON.stringify(ladderLineMap));
+        drawLadder([]);
+      } else {
+        howToArea.style.display = 'flex';              // 안내문 보이기
+        ladderCanvasArea.style.display = 'none';        // 사다리 UI 숨기기
+      }
+
       choosePlayerRow.style.display = 'none';
       verifyRow.style.display = 'none';
       startBtn.style.display = '';
@@ -280,11 +310,6 @@
       prevHalfPath = null;
       lastEndCol = null;
       isVerifying = false;
-      if (usedCount >= 2) {
-        makeLadder(usedCount, ladderHeight);
-        currentLadderBackup = JSON.parse(JSON.stringify(ladderLineMap));
-        drawLadder([]);
-      }
     };
 
     function renderResultInputs(count) {

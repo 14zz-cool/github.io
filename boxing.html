@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>도트 복싱 가위바위보 (게이지 제거 최종본)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body { background: #22243a; color: #fff; font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif; margin:0; text-align:center;}
+    .wrap { max-width:850px; margin:24px auto 0 auto; background:#25265a; border-radius:26px; box-shadow:0 8px 44px #0008; padding:32px 12px 36px 12px; position:relative; overflow:hidden;}
+    .scoreboard { font-size:2em; margin-bottom: 10px; font-weight:900;}
+    .roundbar { font-size:1.22em; margin-bottom:12px; letter-spacing:1px;}
+    .ring-bg {
+      display:flex; justify-content:space-between; align-items:flex-end; position:relative;
+      width: 430px; margin: 38px auto 0 auto; min-height:210px;
+      background: radial-gradient(circle at 50% 80%, #3b70c0 70%, #1c2042 100%);
+      border-radius: 110px;
+      box-shadow: 0 8px 44px #0007;
+      padding: 36px 30px 20px 30px;
+      z-index:1;
+      transition: filter 0.24s;
+    }
+    .ring-bg.shake { animation: ring-shake .32s cubic-bezier(.54,1.6,.19,1.01);}
+    @keyframes ring-shake {
+      0%{filter:none;}
+      15%{filter:brightness(1.12) blur(2px);}
+      40%{filter:brightness(1.13) blur(3.2px);}
+      70%{filter:brightness(1.05) blur(1.3px);}
+      100%{filter:none;}
+    }
+    .ko-flash { animation: ko-flash .64s linear 1;}
+    @keyframes ko-flash {
+      0% { background:rgba(255,225,0,0.22);}
+      30% { background:rgba(255,40,40,0.35);}
+      70% { background:rgba(255,225,0,0.12);}
+      100%{ background:transparent;}
+    }
+    .boxer-img { width: 170px; height: 170px; position:relative; overflow:visible;}
+    .boxer-img svg { width: 170px; height: 170px; image-rendering:pixelated;}
+    .boxer-img .spark {
+      position:absolute; left:43px; top:9px; font-size:2.5em; animation:sparkfade .64s linear; pointer-events:none; z-index:3;
+    }
+    @keyframes sparkfade { 0%{opacity:1; transform:scale(1);} 75%{opacity:0.95;} 100%{opacity:0; transform:scale(1.25);} }
+    .boxer-img .petal {
+      position:absolute; top:-48px; font-size:2em; opacity:0.92; pointer-events:none; z-index:10;
+      animation: petal-fall 1.55s cubic-bezier(.61,0,1,.82) forwards;
+    }
+    @keyframes petal-fall {
+      0%{opacity:1;}
+      90%{opacity:1;}
+      100%{transform: translateY(120px) rotate(45deg); opacity:0;}
+    }
+    .vs-ring {
+      position: absolute; left:50%; top:24%; transform:translate(-50%,-45%);
+      font-size:3.1em; font-weight:900; color:#ffe66b; text-shadow:2px 2px 8px #232344;
+      background:rgba(30,32,68,0.45); border-radius:50%; padding:4px 19px 6px 19px; z-index:2;
+    }
+    .ring-svg { 
+      position:absolute; left:50%; top:73%; transform:translate(-50%,-50%);
+      width:235px; height:66px; pointer-events:none; z-index:0;
+    }
+    .choices { display:flex; justify-content:center; gap:34px; margin:26px 0;}
+    .choice-btn { width:84px; height:84px; font-size:2.7em; border-radius:50%; border:none; background:#45477a; color:#fff; cursor:pointer; transition:.13s; box-shadow:0 3px 12px #0006;}
+    .choice-btn:hover { background:#5baaff;}
+    .choice-btn:active { transform:scale(0.91);}
+    .disabled { opacity:0.4; pointer-events:none;}
+    .timerbar { font-size:1.6em; color:#fd5; margin-bottom:8px;}
+    .bigmsg, .roundmsg { position:fixed; left:0; top:0; right:0; bottom:0; display:flex; align-items:center; justify-content:center; pointer-events:none; z-index:99;}
+    .bigmsg-inner, .roundmsg-inner { background:#232344ee; border-radius:22px; color:#ffd76c; font-size:3em; padding:50px 56px 36px 56px; box-shadow:0 8px 32px #0009; font-weight:900; animation: popfade 0.8s;}
+    @keyframes popfade { 0% {transform:scale(0.7);opacity:0;} 20%{opacity:1;} 65%{transform:scale(1.07);} 100%{transform:scale(1);opacity:1;} }
+    .hit { animation: hit .6s cubic-bezier(.54,1.6,.19,1.01);}
+    @keyframes hit {
+      0%{transform:translateX(0) rotate(0);}
+      20%{transform:translateX(-19px) rotate(-9deg);}
+      60%{transform:translateX(10px) rotate(5deg);}
+      100%{transform:translateX(0) rotate(0);}
+    }
+    .winner { filter:none; opacity:1; }
+    .loser  { filter: grayscale(100%) blur(1px) brightness(0.6); opacity:0.55;}
+    .ko { color:#ff4242; text-shadow:2px 3px 9px #222; animation:ko-pop .72s cubic-bezier(.3,2,.5,1) 1;}
+    @keyframes ko-pop {0%{transform:scale(0.3) rotate(-40deg);} 55%{transform:scale(1.3) rotate(6deg);} 90%{transform:scale(1.06);} 100%{transform:scale(1) rotate(0);}}
+    .judgement { color:#32e2e2; }
+    .againbtn, .startbtn { margin:28px 8px 0 8px; padding:15px 44px; border-radius:14px; border:none; background:#5baaff; color:#fff; font-size:1.3em; font-weight:800; cursor:pointer; box-shadow:0 3px 18px #0006;}
+    #startBtn { display:inline-block; }
+    #againBtn { display:none; }
+    #finalResult { margin-top:46px; font-size:2.5em; font-weight:900; }
+    .gameTitle { font-size:2.2em; margin-top:8px; font-weight:900; letter-spacing:1px; text-shadow:1px 1px 10px #233;}
+    .gameDesc { margin:12px 0 8px 0; color:#ffd876; font-size:1.15em;}
+    /* 모바일 추가 대응 */
+    @media (max-width:650px){
+      .wrap{padding:4vw 1vw 7vw 1vw;}
+      .ring-bg{width:97vw;min-width:0;padding:5vw 0 6vw 0;}
+      .boxer-img{width:74px;height:74px;}
+      .boxer-img svg{width:74px;height:74px;}
+      .vs-ring{font-size:1.28em;}
+      .ring-svg{width:98vw; height:19vw;}
+      .choice-btn{width:46px;height:46px;font-size:1.13em;}
+      .bigmsg-inner, .roundmsg-inner{font-size:1.17em;padding:11vw 4vw 9vw 4vw;}
+    }
+    @media (max-width:400px){
+      .scoreboard{font-size:1em;}
+      .roundbar{font-size:.92em;}
+      .boxer-img, .boxer-img svg {width:48px;height:48px;}
+      .choice-btn{width:34px;height:34px;font-size:.98em;}
+      .bigmsg-inner, .roundmsg-inner{font-size:.79em;}
+      .gameTitle{font-size:1.09em;}
+      .gameDesc{font-size:.7em;}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap" id="mainWrap">
+    <div class="gameTitle">🥊 도트 복싱 가위바위보!</div>
+    <div class="gameDesc">5라운드, KO(3점) 또는 판정승!<br>플레이어와 컴퓨터 복서가 링 위에서 승부합니다.</div>
+    <div class="ring-bg" id="ringBg">
+      <div class="boxer-img" id="playerBoxer"></div>
+      <div class="vs-ring">VS</div>
+      <div class="boxer-img" id="aiBoxer"></div>
+      <div class="ring-svg">
+        <svg viewBox="0 0 240 70" width="100%" height="100%" style="display:block;">
+          <ellipse cx="120" cy="52" rx="98" ry="18" fill="#eedba6" opacity="0.6"/>
+          <ellipse cx="120" cy="60" rx="83" ry="8" fill="#baa873" opacity="0.32"/>
+          <rect x="17" y="45" width="14" height="23" fill="#f5d984" stroke="#ad9343" stroke-width="2"/>
+          <rect x="209" y="45" width="14" height="23" fill="#f5d984" stroke="#ad9343" stroke-width="2"/>
+        </svg>
+      </div>
+    </div>
+    <div id="startArea" style="margin-top:24px;">
+      <button class="startbtn" id="startBtn">게임 시작</button>
+    </div>
+    <div id="gameArea" style="display:none;">
+      <div class="scoreboard" id="scoreboard"></div>
+      <div class="roundbar" id="roundbar"></div>
+      <div class="timerbar" id="timerbar"></div>
+      <div class="choices" id="choices"></div>
+      <div id="finalResult"></div>
+      <button class="againbtn" id="againBtn">다시 시작</button>
+    </div>
+    <div class="roundmsg" id="roundMsg" style="display:none;">
+      <div class="roundmsg-inner" id="roundMsgText"></div>
+    </div>
+    <div class="bigmsg" id="bigMsg" style="display:none;">
+      <div class="bigmsg-inner" id="bigMsgText"></div>
+    </div>
+  </div>
+  <script>
+    function boxerSVG(side, pose, extra) {
+      const mainColor = side==='player' ? '#3687e2' : '#e33';
+      const gloveColor = side==='player' ? '#2072ff' : '#ff2020';
+      const shortsColor = side==='player' ? '#6cc3ff' : '#fa5656';
+      const mouthY = pose==='hit'? 61 : 66;
+      const mouthFill = pose==='hit'? '#ae2c2c' : '#432a19';
+      const leftPunch = pose==='punch' && side==='player';
+      const rightPunch = pose==='punch' && side==='ai';
+      const shake = pose==='hit' ? 'hit' : '';
+      const flip = side==='ai' ? 'scale(-1,1)' : '';
+      const winArm = extra?.win ? `<rect x="45" y="8" width="32" height="15" fill="${gloveColor}" rx="9" transform="rotate(-18 61 12)"/>` : '';
+      const loseStar = extra?.lose ? `<polygon points="115,44 121,58 106,49 127,49 112,58" fill="#fd6" stroke="#e33" stroke-width="2"/>` : '';
+      const star = pose==='hit' ? `<polygon points="153,33 162,54 138,40 168,40 144,54" fill="#fd6" stroke="#e33" stroke-width="3"/>` : '';
+      const nosebleed = pose==='hit' || extra?.lose
+        ? `<ellipse cx="85" cy="60" rx="4" ry="8" fill="#b02020"/><ellipse cx="89" cy="62" rx="2.8" ry="6" fill="#df6f6f"/>` : '';
+      return `<svg viewBox="0 0 200 180" style="image-rendering:pixelated;${flip?'transform:'+flip+';':''}" class="${shake}">
+        <rect x="66" y="30" width="68" height="44" fill="#ffe2bc" rx="17"/><!-- head -->
+        <rect x="72" y="72" width="56" height="56" fill="${mainColor}" rx="16"/><!-- body -->
+        <rect x="84" y="128" width="14" height="34" fill="#3b3531" rx="5"/><!-- left leg -->
+        <rect x="102" y="128" width="14" height="34" fill="#3b3531" rx="5"/><!-- right leg -->
+        <rect x="78" y="152" width="40" height="16" fill="${shortsColor}" rx="7"/><!-- shorts -->
+        <rect x="${leftPunch?16:50}" y="66" width="32" height="12" fill="#ffe2bc" rx="5" transform="rotate(${leftPunch?-18:13} 66 72)"/><!-- left arm -->
+        <rect x="${rightPunch?152:118}" y="66" width="32" height="12" fill="#ffe2bc" rx="5" transform="rotate(${rightPunch?18:-13} 134 72)"/><!-- right arm -->
+        <ellipse cx="${leftPunch?26:58}" cy="78" rx="16" ry="16" fill="${gloveColor}"/>
+        <ellipse cx="${rightPunch?172:142}" cy="78" rx="16" ry="16" fill="${gloveColor}"/>
+        <rect x="98" y="54" width="10" height="10" fill="#232323" rx="3"/>
+        <rect x="122" y="54" width="10" height="10" fill="#232323" rx="3"/>
+        <rect x="108" y="${mouthY}" width="16" height="8" fill="${mouthFill}" rx="2.9"/>
+        ${winArm}
+        ${loseStar}
+        ${nosebleed}
+        ${star}
+      </svg>`;
+    }
+
+    const handMap = { "rock":"✊", "scissors":"✌️", "paper":"✋" };
+    const hands = ["rock","scissors","paper"];
+    let state = {};
+    const scoreboard = document.getElementById('scoreboard');
+    const roundbar = document.getElementById('roundbar');
+    const playerBoxer = document.getElementById('playerBoxer');
+    const aiBoxer = document.getElementById('aiBoxer');
+    const choices = document.getElementById('choices');
+    const timerbar = document.getElementById('timerbar');
+    const roundMsg = document.getElementById('roundMsg');
+    const roundMsgText = document.getElementById('roundMsgText');
+    const bigMsg = document.getElementById('bigMsg');
+    const bigMsgText = document.getElementById('bigMsgText');
+    const againBtn = document.getElementById('againBtn');
+    const startArea = document.getElementById('startArea');
+    const gameArea = document.getElementById('gameArea');
+    const startBtn = document.getElementById('startBtn');
+    const finalResult = document.getElementById('finalResult');
+    const ringBg = document.getElementById('ringBg');
+
+    startBtn.onclick = initGame;
+    againBtn.onclick = ()=>{ showStart(); };
+
+    function showRingIdle(){
+      playerBoxer.innerHTML = boxerSVG('player','idle');
+      aiBoxer.innerHTML = boxerSVG('ai','idle');
+    }
+
+    function showStart(){
+      startArea.style.display = "block";
+      gameArea.style.display = "none";
+      finalResult.innerHTML = "";
+      showRingIdle();
+      ringBg.classList.remove('shake','ko-flash');
+    }
+
+    function initGame(){
+      startArea.style.display = "none";
+      gameArea.style.display = "block";
+      finalResult.innerHTML = "";
+      state = {
+        round:1,
+        roundMax:5,
+        player:0,
+        ai:0,
+        history:[],
+        inRound:false,
+        gameEnd:false,
+        timer:null,
+        timerLeft:3,
+      };
+      againBtn.style.display="none";
+      ringBg.classList.remove('shake','ko-flash');
+      updateUI();
+      setTimeout(()=>startRound(),400);
+    }
+
+    function startRound(){
+      state.inRound = true;
+      state.timerLeft = 3;
+      state.choiceMade = false;
+      ringBg.classList.remove('shake');
+      updateUI();
+      showRoundMsg(`라운드 ${state.round} 시작!`);
+      setTimeout(()=>{
+        showChoices();
+        startTimer();
+      },1760);
+    }
+
+    function showRoundMsg(msg){
+      roundMsg.style.display="flex";
+      roundMsgText.textContent = msg;
+      setTimeout(()=>{ roundMsg.style.display="none"; }, 1400);
+    }
+
+    function startTimer(){
+      timerbar.textContent = `3초 내에 선택하세요!`;
+      state.timer = setInterval(()=>{
+        state.timerLeft -= 1;
+        if(state.timerLeft<=0){
+          clearInterval(state.timer);
+          state.timer = null;
+          timerbar.textContent = "";
+          if(!state.choiceMade){
+            doRound(null); // 미선택=패배
+          }
+        } else {
+          timerbar.textContent = `${state.timerLeft}초 내에 선택하세요!`;
+        }
+      },1000);
+    }
+
+    function showChoices(){
+      choices.innerHTML = "";
+      hands.forEach(h=>{
+        let btn = document.createElement("button");
+        btn.className = "choice-btn";
+        btn.innerHTML = handMap[h];
+        btn.onclick = ()=>{ if(state.inRound){clearInterval(state.timer); doRound(h);} };
+        choices.appendChild(btn);
+      });
+      choices.classList.remove("disabled");
+      timerbar.textContent = "3초 내에 선택하세요!";
+    }
+
+    function hideChoices(){
+      choices.classList.add("disabled");
+      choices.innerHTML = "";
+      timerbar.textContent = "";
+    }
+
+    function punchEffect(target){
+      ringBg.classList.add('shake');
+      const boxerDiv = target==='ai'?aiBoxer:playerBoxer;
+      const spark = document.createElement('div');
+      spark.className = "spark";
+      spark.innerHTML = "✨💥";
+      boxerDiv.appendChild(spark);
+      setTimeout(()=>{spark.remove();},512);
+      setTimeout(()=>{ringBg.classList.remove('shake');},512);
+    }
+
+    function flowerEffect(targetDiv){
+      for(let i=0;i<12;i++){
+        const petal = document.createElement('div');
+        petal.className = "petal";
+        petal.innerText = ["🌸","🌼","✨","🎉"][Math.floor(Math.random()*4)];
+        petal.style.left = (20+Math.random()*120)+"px";
+        petal.style.top = (-48-Math.random()*18)+"px";
+        petal.style.fontSize = (1.5+Math.random()*0.8)+"em";
+        petal.style.animationDelay = (Math.random()*0.4)+"s";
+        targetDiv.appendChild(petal);
+        setTimeout(()=>{petal.remove();},1750);
+      }
+    }
+
+    function doRound(playerHand){
+      state.inRound = false;
+      hideChoices();
+      timerbar.textContent = "";
+      let aiHand = hands[Math.floor(Math.random()*3)];
+      let winner = getWinner(playerHand, aiHand);
+      let pName = playerHand?handMap[playerHand]:"(미선택)";
+      let aName = handMap[aiHand];
+      state.history.push({p:playerHand, a:aiHand, winner});
+      playerBoxer.innerHTML = boxerSVG('player', 'idle');
+      aiBoxer.innerHTML = boxerSVG('ai', 'idle');
+      setTimeout(()=>{
+        playerBoxer.innerHTML = boxerSVG('player', 'idle')+`<div style="position:absolute;left:33px;top:12px;font-size:2.6em;">${pName}</div>`;
+        aiBoxer.innerHTML = boxerSVG('ai', 'idle')+`<div style="position:absolute;right:33px;top:12px;font-size:2.6em;">${aName}</div>`;
+      },176);
+      setTimeout(()=>{
+        playerBoxer.innerHTML = boxerSVG('player', winner==='player'?'punch':(winner==='ai'?'hit':'idle'))+`<div style="position:absolute;left:33px;top:12px;font-size:2.6em;">${pName}</div>`;
+        aiBoxer.innerHTML = boxerSVG('ai', winner==='ai'?'punch':(winner==='player'?'hit':'idle'))+`<div style="position:absolute;right:33px;top:12px;font-size:2.6em;">${aName}</div>`;
+        let pImg = playerBoxer.querySelector('svg'), aImg = aiBoxer.querySelector('svg');
+        if(winner==='player')      { aImg.classList.add("hit"); punchEffect('ai'); }
+        else if(winner==='ai')     { pImg.classList.add("hit"); punchEffect('player'); }
+      },1120);
+      setTimeout(()=>{
+        if(winner==='tie'){
+          showBigMsg("비겼습니다!", ()=>{ setTimeout(startRound,560); });
+        } else if(winner==='player'){
+          state.player++;
+          showBigMsg("플레이어의 펀치!", nextLogic);
+        } else if(winner==='ai'){
+          state.ai++;
+          showBigMsg("컴퓨터의 펀치!", nextLogic);
+        }
+        updateUI();
+      },2080);
+    }
+
+    function showBigMsg(msg,cb){
+      bigMsg.style.display="flex";
+      bigMsgText.textContent = msg;
+      setTimeout(()=>{
+        bigMsg.style.display="none";
+        if(cb) cb();
+      }, 1250);
+    }
+
+    function getWinner(player, ai){
+      if(!player) return "ai"; // 미선택=패배
+      if(player===ai) return "tie";
+      if( (player==="rock"&&ai==="scissors") ||
+          (player==="scissors"&&ai==="paper") ||
+          (player==="paper"&&ai==="rock") ) return "player";
+      return "ai";
+    }
+
+    function updateUI(){
+      scoreboard.innerHTML = `플레이어 <b>${state.player}</b> : <b>${state.ai}</b> 컴퓨터`;
+      roundbar.textContent = `라운드 ${state.round} / 5`;
+      if(state.gameEnd){
+        const playerWin = state.player>=state.ai;
+        playerBoxer.innerHTML = boxerSVG('player','idle',{win:playerWin,lose:!playerWin});
+        aiBoxer.innerHTML = boxerSVG('ai','idle',{win:!playerWin,lose:playerWin});
+        playerBoxer.querySelector('svg')?.classList.toggle('winner', playerWin);
+        playerBoxer.querySelector('svg')?.classList.toggle('loser', !playerWin);
+        aiBoxer.querySelector('svg')?.classList.toggle('winner', !playerWin);
+        aiBoxer.querySelector('svg')?.classList.toggle('loser', playerWin);
+      }
+    }
+
+    function koFlash(){
+      ringBg.classList.add('ko-flash');
+      setTimeout(()=>{ringBg.classList.remove('ko-flash');},512);
+    }
+
+    function nextLogic(){
+      // KO 체크
+      if(state.player>=3 || state.ai>=3){
+        state.gameEnd=true;
+        let winner = state.player>=3 ? '플레이어' : '컴퓨터';
+        koFlash();
+        showBigMsg("KO!", ()=>{
+          updateUI();
+          finalResult.innerHTML = `<span class="ko">${winner} KO 승리!</span>`;
+          setTimeout(()=>{
+            flowerEffect(state.player>=3?playerBoxer:aiBoxer);
+          },350);
+          againBtn.style.display="inline-block";
+        });
+        return;
+      }
+      // 라운드 체크
+      if(state.round>=5){
+        state.gameEnd=true;
+        setTimeout(()=>{
+          let winnerTxt;
+          if(state.player===state.ai){
+            winnerTxt = `<span class="judgement">무승부!</span>`;
+          } else {
+            let winner = state.player>state.ai ? "플레이어" : "컴퓨터";
+            winnerTxt = `<span class="judgement">${winner} 판정승!</span>`;
+          }
+          updateUI();
+          finalResult.innerHTML = winnerTxt;
+          setTimeout(()=>{
+            flowerEffect(state.player>state.ai?playerBoxer:aiBoxer);
+          },400);
+          againBtn.style.display="inline-block";
+        },520);
+        return;
+      }
+      state.round++;
+      setTimeout(()=>{ startRound(); },880);
+    }
+
+    showStart();
+  </script>
+</body>
+</html>
